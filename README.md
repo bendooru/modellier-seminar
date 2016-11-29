@@ -1,4 +1,4 @@
-# Moellierungsseminar
+# Modellierungsseminar
 
 Repository zur Speicherung relevanter Dateien:
 
