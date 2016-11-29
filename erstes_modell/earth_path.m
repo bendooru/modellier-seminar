@@ -1,38 +1,23 @@
-function X = earth_path(lon, lat, t, delta_t, v, steps, radius)
-    X = zeros(3,steps);
-    
-    p_0 = zeros(3,1);
-    
-    [p_0(1), p_0(2), p_0(3)] = sph2cart(lon, lat, radius);
-    
-    X(:,1) = p_0;
-    
-    for i=2:steps
-        p_prev = X(:, i-1);
-        
-        p_normal = p_prev ./ norm(p_prev);
-        
-        sonPos = sonnen_pos(t) - p_prev;
-        
-        % Projektion?
-        sonne_elev = vector_angle(p_prev, sonPos);
-        
-        if 0 <= sonne_elev && sonne_elev <= pi/2
-            richtung = sonPos - dot(sonPos, p_normal).*p_normal;
-            if norm(richtung) == 0
-                r_normal = 0;
-            else
-                r_normal = richtung ./ norm(richtung);
-            end
+function p = earth_path(p_0, t, delta_t, v, radius)
+    p_normal = p_0 ./ norm(p_0);
 
-            p = p_prev + v*delta_t*r_normal;
-            p = (radius/norm(p)) .* p;
+    sonPos = sonnen_pos(t) - p_0;
+
+    % Projektion?
+    sonne_elev = vector_angle(p_0, sonPos);
+
+    if 0 <= sonne_elev && sonne_elev <= pi/2
+        richtung = sonPos - dot(sonPos, p_normal).*p_normal;
+        if norm(richtung) == 0
+            r_normal = 0;
         else
-            p = p_prev;
+            r_normal = richtung ./ norm(richtung);
         end
-        
-        X(:, i) = p;
-        t = t + delta_t;
+
+        p = p_0 + v*delta_t*r_normal;
+        p = (radius/norm(p)) .* p;
+    else
+        p = p_0;
     end
     
     function gamma = vector_angle(v1, v2)

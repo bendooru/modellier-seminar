@@ -8,7 +8,7 @@ function v = sonnen_pos(t)
     dist_S = 149000000000;
 
     omega_E = (2*pi)/tag;
-    alpha_E = 0.13*pi; % Erdachsenneigung
+    alpha_E = -0.13*pi; % Erdachsenneigung
     
     dreh_Y = [  cos(alpha_E), 0, sin(alpha_E);
                0           1, 0;

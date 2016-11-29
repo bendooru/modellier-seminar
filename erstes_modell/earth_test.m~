@@ -3,12 +3,12 @@ figure;
 earth_rad = 6371000;
 earth_rad_klein = earth_rad - 1;
 
-%surf(earth_rad_klein.*X, earth_rad_klein.*Y, earth_rad_klein.*Z);
+surf(earth_rad_klein.*X, earth_rad_klein.*Y, earth_rad_klein.*Z);
 hold on;
 
 % in Breitengraden
-lon = deg2rad(180 + 7); % ←→
-lat = deg2rad(49); % ↑↓
+lon = deg2rad(230); % ←→
+lat = deg2rad(50); % ↑↓
 
 steps = 5000;
 
@@ -21,16 +21,13 @@ p_0 = zeros(3, 1);
 T = zeros(3, steps);
 
 for i = 1:steps
-    T(:, i) = p_0;
     p_0 = earth_path(p_0, t_0, delta_t, 90, earth_rad);
+    T(:, i) = p_0;
     t_0 = t_0 + delta_t;
 end
 
-T = T./earth_rad;
-
-earthmap; hold on;
-plot3(T(1,:), T(2,:), T(3, :), '-r', 'Linewidth', 3); %
-plot3(T(1,1), T(2,1), T(3, 1), '.b', 'Linewidth', 3); % Startpunkt
+plot3(T(1,:), T(2,:), T(3, :), '-r', 'Linewidth', 3);
+plot3(T(1,1), T(2,1), T(3, 1), '.b', 'Linewidth', 3);
 hold off;
 
 % Koordinatenplot
