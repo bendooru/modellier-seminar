@@ -8,7 +8,7 @@ hold on;
 
 % in Breitengraden
 lon = deg2rad(180 + 7); % ←→
-lat = deg2rad(49); % ↑↓
+lat = deg2rad(32); % ↑↓
 
 steps = 5000;
 
@@ -19,7 +19,7 @@ p_0 = zeros(3, 1);
 [p_0(1), p_0(2), p_0(3)] = sph2cart(lon, lat, earth_rad);
 
 T = zeros(3, steps);
-
+t_0 = sonnenaufgang(p_0, t_0);
 for i = 1:steps
     T(:, i) = p_0;
     p_0 = earth_path(p_0, t_0, delta_t, 90, earth_rad);
