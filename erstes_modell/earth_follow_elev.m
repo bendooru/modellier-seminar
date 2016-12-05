@@ -1,4 +1,4 @@
-function S = earth_follow_elev(lon, lat, speed, delta_t, tag)
+function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
     earth_rad = 6371000;
     p_0 = zeros(3,1);
     
@@ -18,6 +18,7 @@ function S = earth_follow_elev(lon, lat, speed, delta_t, tag)
     maxsteps = round(1440/delta_t);
     X = zeros(3, maxsteps);
     S = zeros(2, maxsteps);
+    V = zeros(1, maxsteps);
     E = zeros(1, maxsteps);
     i = 1;
     
@@ -38,30 +39,33 @@ function S = earth_follow_elev(lon, lat, speed, delta_t, tag)
         E(i) = get_elevation(S(1,i), S(2,i));
         
         % Zeit, um Höhenunterschied zu überbrücken
-        slope_delta = sqrt(((E(i)-E(i-1))/speed)^2 + delta_t^2);
+        % siehe Tobler's hiking function
+        actual_speed = (6 *speed/5) * exp(-3.5*...
+            abs((E(i)-E(i-1))/(3*delta_t*speed/50)/1000 + 0.05));
+        %actual_speed = speed;
+        disp(actual_speed);
+        
+        delta_t_true = delta_t * speed / actual_speed;
+        V(i-1) = actual_speed;
         
         % (3 ist elativ zufällig gewählt)
         % falss slope_delta zu groß, tue nichts da die Steigung nicht
         % überbrückbar ist
-        if slope_delta/delta_t > 3
+        if actual_speed < 3
             % alles zurücksetzen
             X(:,i) = X(:,i-1);
             S(:,i) = S(:,i-1);
             E(i) = E(i-1);
             t = t + delta_t;
         else
-            % Annahme: Abstieg kann in kürzerer Zeit bewerkstelligt werden
-            if E(i) < E(i-1)
-                t = t + delta_t;
-            else
-                t = t + slope_delta;
-            end
+            t = t + delta_t_true;
         end
     end
     
     % entferne überschüssige 0-Elemente
     S = S(:,1:i);
-    
+    E = E(:,1:i);
+    figure; plot(V(:,1:i-1));
     AREA = zeros(1,4);
     % verkleinere umschließendes Rechteck
     AREA([3 1]) = min(S,[],2) - 0.05;

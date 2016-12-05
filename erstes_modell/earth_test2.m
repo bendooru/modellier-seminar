@@ -1,10 +1,10 @@
-lon = 7.03;
-lat = 48.8;
+lon = 7.21;
+lat = 48.99;
 
-speed = 90;
+speed = 95;
 delta_t = 0.5;
-tag = 300;
+tag = 180;
 
-S = earth_follow_elev(lon, lat, speed, delta_t, tag);
+[~, E] = earth_follow_elev(lon, lat, speed, delta_t, tag);
 
 %plot(S(1,:), S(2,:));
