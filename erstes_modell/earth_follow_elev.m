@@ -13,7 +13,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
     LAT = [round(lat-0.5), round(lat+0.5)];
     LON = [round(lon-0.5), round(lon+0.5)];
     
-    R = readhgt(LAT, LON);
+    R = readhgt(LAT, LON, 'interp');
     
     maxsteps = round(1440/delta_t);
     X = zeros(3, maxsteps);
@@ -43,7 +43,6 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
         actual_speed = (6 *speed/5) * exp(-3.5*...
             abs((E(i)-E(i-1))/(3*delta_t*speed/50)/1000 + 0.05));
         %actual_speed = speed;
-        disp(actual_speed);
         
         delta_t_true = delta_t * speed / actual_speed;
         V(i-1) = actual_speed;
@@ -51,7 +50,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
         % (3 ist elativ zufällig gewählt)
         % falss slope_delta zu groß, tue nichts da die Steigung nicht
         % überbrückbar ist
-        if actual_speed < 3
+        if actual_speed < 20
             % alles zurücksetzen
             X(:,i) = X(:,i-1);
             S(:,i) = S(:,i-1);
