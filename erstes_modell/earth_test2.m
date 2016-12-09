@@ -1,7 +1,7 @@
-lon = 7.03;
-lat = 31.99;
+lon = 10;
+lat = 46.5;
 
-speed = 90;
+speed = 89;
 delta_t = 0.5;
 tag = 180;
 
