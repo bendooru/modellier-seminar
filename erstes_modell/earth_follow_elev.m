@@ -1,9 +1,8 @@
 function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
     earth_rad = 6371000;
-    p_0 = zeros(3,1);
     
     % Berechnung ausgehend von Breiten-/Längengraden
-    [p_0(1), p_0(2), p_0(3)] = sph2cart(deg2rad(lon), deg2rad(lat), earth_rad);
+    p_0 = lonlat2vec(lon, lat, earth_rad);
     [t_0, visible] = sonnenaufgang(p_0, tag);
     t = t_0;
     p = p_0;

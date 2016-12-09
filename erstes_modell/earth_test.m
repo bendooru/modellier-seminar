@@ -7,16 +7,15 @@ earth_rad_klein = earth_rad - 1;
 hold on;
 
 % in Breitengraden
-lon = deg2rad(180 + 7); % ←→
-lat = deg2rad(32); % ↑↓
+lon = 180 + 7; % ←→
+lat = 32; % ↑↓
 
 steps = 5000;
 
 t_0 = 172 * 1440;
 delta_t = 0.5;
 
-p_0 = zeros(3, 1);
-[p_0(1), p_0(2), p_0(3)] = sph2cart(lon, lat, earth_rad);
+p_0 =lonlat2vec(lon, lat, earth_rad);
 
 T = zeros(3, steps);
 t_0 = sonnenaufgang(p_0, t_0);

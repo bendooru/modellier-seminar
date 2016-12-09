@@ -1,10 +1,11 @@
 % Erste Versuche
 
-bounds = [50.74 7.15 50.75 7.16];
+bounds = [50.735 7.145 50.755 7.165];
 
 tic
+% API-Query muss noch angepasst werden
 api_name = sprintf(...
-    'http://overpass-api.de/api/interpreter?data=(way(%f,%f,%f,%f);>;);out;',...
+    'http://overpass-api.de/api/interpreter?data=(way["highway"](%f,%f,%f,%f);>;);out;',...
     bounds);
 
 remote_xml = webread(api_name);
