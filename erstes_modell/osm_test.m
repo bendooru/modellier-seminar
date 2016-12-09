@@ -36,7 +36,7 @@ dg = or(connectivity_matrix, connectivity_matrix.');
 
 curr_coord = [7.157; 50.749]; % Spaltenvektor!
 
-nearest_node_idx = findNearest2(curr_coord, parsed_osm.node.xy);
+nearest_node_idx = findNearestVec(curr_coord, parsed_osm.node.xy);
 
 possible_next = find(dg(:, nearest_node_idx)); % Indizes adjazenter Knoten
 
