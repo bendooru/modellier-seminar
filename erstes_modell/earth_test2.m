@@ -1,8 +1,12 @@
-lon = 10;
-lat = 46.5;
+lon = 7.768889;
+lat = 49.444722;
 
-speed = 89;
-delta_t = 0.5;
-tag = 180;
+% lon = 139.774444;
+% lat =  35.683889;
 
-[~, E] = earth_follow_elev(lon, lat, speed, delta_t, tag);
+speed = 90;
+delta_t = 1;
+tag = 172;
+
+% füge 1 als 6. Argument hinzu, um für konstante Geschw. zu plotten
+[S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag);
