@@ -1,5 +1,13 @@
-function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
+function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     earth_rad = 6371000;
+    
+    % einfacher Schalter, um Geschwindigkeit konstant zu machen
+    variable_speed = true;
+    if (nargin == 6)
+        if cs == 1
+            variable_speed = false;
+        end
+    end
     
     % Berechnung ausgehend von Breiten-/Längengraden
     p_0 = lonlat2vec(lon, lat, earth_rad);
@@ -12,7 +20,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
     LAT = [round(lat-0.5), round(lat+0.5)];
     LON = [round(lon-0.5), round(lon+0.5)];
     
-    R = readhgt(LAT, LON, 'interp');
+    R = readhgt(LAT, LON, 'interp', 'outdir', 'hgt/');
     
     maxsteps = round(1440/delta_t);
     X = zeros(3, maxsteps);
@@ -39,9 +47,12 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
         
         % Zeit, um Höhenunterschied zu überbrücken
         % siehe Tobler's hiking function
-        actual_speed = (6 *speed/5) * exp(-3.5*...
-            abs((E(i)-E(i-1))/(3*delta_t*speed/50)/1000 + 0.05));
-        %actual_speed = speed;
+        if variable_speed
+            actual_speed = (6 *speed/5) * exp(-3.5*...
+                abs((E(i)-E(i-1))/(3*delta_t*speed/50)/1000 + 0.05));
+        else
+            actual_speed = speed;
+        end
         
         delta_t_true = delta_t * speed / actual_speed;
         V(i-1) = actual_speed;
@@ -69,7 +80,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag)
     AREA([3 1]) = min(S,[],2) - 0.05;
     AREA([4 2]) = max(S,[],2) + 0.05;
     
-    readhgt(AREA);
+    readhgt(AREA, 'outdir', 'hgt/');
     hold on;
     plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
     hold off;
