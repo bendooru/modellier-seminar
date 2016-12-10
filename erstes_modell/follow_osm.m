@@ -115,7 +115,8 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                 filename = fullfile('maps', sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    error('Irgendwas stimmt mit fopen nicht\n');
+                    error('Irgendwas stimmt mit fopen nicht.\n%s wird nicht als filename akzeptiert.', ...
+                        filename);
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
