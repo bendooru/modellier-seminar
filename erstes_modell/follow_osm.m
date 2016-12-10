@@ -39,6 +39,8 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     ax = axes('Parent', fig);
     hold(ax, 'on');
     
+    map_filename_spec = 'map-%f_%f_%f_%f.osm';
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while t < t_end && visible
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
@@ -57,7 +59,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                 for i = 1:numfiles
                     % parse Bounding Box aus Dateinamen heraus; transponieren!
                     map_bounds(i, :) = sscanf(osm_files(i).name, ...
-                        'map-%f_%f_%f_%f.osm')';
+                        map_filename_spec)';
                     
                     % Distanz zu Grenzen der Bounding Box (Unendlich-Norm)
                     map_dist(1, i) = boundaryDistance(coord, map_bounds(i, :));
@@ -110,8 +112,11 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
 
                 % Generiere (weitestgehend) eindeutigen Dateinamen für
                 % Straßendaten und schreibe xml in die Datei
-                filename = sprintf('map-%f_%f_%f_%f.osm', bounds);
-                fid = fopen(fullfile('maps',  filename), 'wt');
+                filename = fullfile('maps', sprintf(map_filename_spec, bounds));
+                fid = fopen(filename, 'wt');
+                if fid == -1
+                    error('Irgendwas stimmt mit fopen nicht\n');
+                end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
                 
