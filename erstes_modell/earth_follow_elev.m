@@ -20,6 +20,10 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     LAT = [round(lat-0.5), round(lat+0.5)];
     LON = [round(lon-0.5), round(lon+0.5)];
     
+    if ~isdir('hgt')
+        mkdir('hgt');
+    end
+    
     R = readhgt(LAT, LON, 'interp', 'outdir', 'hgt/');
     
     maxsteps = round(1440/delta_t);
