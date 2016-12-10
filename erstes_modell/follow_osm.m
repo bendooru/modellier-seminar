@@ -41,6 +41,10 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
     
+    if ~isdir('maps')
+        mkdir('maps');
+    end
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while t < t_end && visible
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
