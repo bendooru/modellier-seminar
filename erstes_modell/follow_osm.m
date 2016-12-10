@@ -29,7 +29,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     
     step = 1;
     
-    node_id_prev = -1;
+    node_idx_prev = -1;
     coord_prev = [0;0];
     
     maps_used = 0;
@@ -110,8 +110,8 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
 
                 % Generiere (weitestgehend) eindeutigen Dateinamen für
                 % Straßendaten und schreibe xml in die Datei
-                filename = sprintf('maps/map-%f_%f_%f_%f.osm', bounds);
-                fid = fopen(filename, 'wt');
+                filename = sprintf('map-%f_%f_%f_%f.osm', bounds);
+                fid = fopen(fullfile('maps',  filename), 'wt');
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
                 
@@ -137,13 +137,13 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
             
             % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert
             % haben
-            node_id = findNearestVec(coord, parsed_osm.node.xy);
-            node_id_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
+            node_idx = findNearestVec(coord, parsed_osm.node.xy);
+            node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
             
             if step == 1
                 % im ersten Schritt müssen Daten initialisiert werden
-                p = osmnode2vec(node_id);
-                coord = parsed_osm.node.xy(:,node_id);
+                p = osmnode2vec(node_idx);
+                coord = parsed_osm.node.xy(:,node_idx);
                 lon = coord(1); lat = coord(2);
 
                 X(:,step) = coord;
@@ -156,8 +156,8 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
         end
         
         % Indizes aller adjazenten Knoten
-        neighbor_ids = find(dg(:, node_id));
-        num_neighbors = size(neighbor_ids, 1);
+        neighbor_idxs = find(dg(:, node_idx));
+        num_neighbors = size(neighbor_idxs, 1);
         
         % benutze bereits geschriebene Funktion um die optimale Laufrichtung
         % Richtung Sonne zu bestimmen
@@ -174,7 +174,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
         for i = 1:num_neighbors
             % bestimme 3d-Position und normalisierte Gang-Richtung für jeden
             % adjazenten Knoten
-            richtung_neighbor(:, i) = osmnode2vec(neighbor_ids(i));
+            richtung_neighbor(:, i) = osmnode2vec(neighbor_idxs(i));
             
             norm_neighbor = norm(richtung_neighbor(:,i) - p);
             if norm_neighbor == 0
@@ -184,7 +184,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
             end
             
             % Skalarprodukt, um Kolinearität der Richtungen zu ermitteln
-            colinear_neighbor(i) = dot(richtung_optimal, r_neighbor);
+            colinear_neighbor(1,i) = dot(richtung_optimal, r_neighbor);
         end
         
         [max_colinear, max_index] = max(colinear_neighbor);
@@ -195,40 +195,36 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
         % für step == 2 ist node_id_prev nicht sinnvoll initialisiert, also
         % übergehe diesen Fall
         if num_neighbors == 2 && step > 2
-            node_id_new = neighbor_ids(neighbor_ids ~= node_id_prev);
-            node_id_prev = node_id;
-            node_id = node_id_new;
+            node_id_new = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
+            node_idx_prev = node_idx;
+            node_idx = node_id_new;
             
             distance = norm(richtung_neighbor(:,max_index) - p);
             p = richtung_neighbor(:,max_index);
             coord_prev = coord;
-            coord = parsed_osm.node.xy(:,node_id);
+            coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
-            
-            X(:,step) = coord;
             
             t = t + distance/speed;
         % Nächstbeste Straße sollte nicht von Sonne weg führen
         % fängt gleichzeitig 'Bewegungen' mit Distanz 0 ab
         elseif max_colinear > 0
-            node_id_prev = node_id;
-            node_id = neighbor_ids(max_index);
+            node_idx_prev = node_idx;
+            node_idx = neighbor_idxs(max_index);
             
             distance = norm(richtung_neighbor(:,max_index) - p);
             p = richtung_neighbor(:,max_index);
             coord_prev = coord;
-            coord = parsed_osm.node.xy(:,node_id);
+            coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
-        
-            X(:,step) = coord;
             
             t = t + distance/speed;
         else
-            X(:,step) = X(:,step-1);
             t = t + delta_t;
             distance = 0;
         end
         
+        X(:, step) = coord;
         T(1,step) = t;
         D(1,step) = D(1,step-1) + distance;
     end
@@ -236,16 +232,18 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     % Plotte gefundene Route
     plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 2);
     hold(ax, 'off');
-    xlabel(ax, 'Longitude'); ylabel(ax, 'Latidude');
+    xlabel(ax, 'Longitude');
+    ylabel(ax, 'Latidude');
     
     % Plotte zurückgelegte Distanz über Zeit
     % bisher: bleiben zu oft in Sackgassen etc hängen; teilweise über mehrere
     % Stunden hinweg
     figure; plot((T - T(1,1))./60, D./1000);
-    xlabel('Time [h]'); ylabel('Distance [km]');
+    xlabel('Time [h]');
+    ylabel('Distance [km]');
     
-    % Abstand eines Vektors zum Komplement der Rechtecksfläche gegeben durch bnd
-    % in der Unendlich-Norm
+    % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch
+    % bnd in der Unendlich-Norm
     function d = boundaryDistance(c, bnd)
         if any(c' < bnd([2 1])) || any(c' > bnd([4 3]))
             d = 0;
