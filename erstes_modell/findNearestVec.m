@@ -5,7 +5,7 @@ function idx = findNearestVec(v, A)
         % spaltenweise euklidische Norm
         [~, idx] = min(sum((A - repmat(v,1,size(A,2))).^2, 1));
     else
-        warning('Wrong vector or matrix dimension in findNearest2.');
+        warning('Wrong vector or matrix dimension in findNearestVec.');
         idx = NaN;
     end
 end
