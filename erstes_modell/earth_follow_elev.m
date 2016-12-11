@@ -17,14 +17,15 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     
     % A priori umschließendes Koordinatenrechteck, um Höhendaten bestimmen zu
     % können
-    LAT = [round(lat-0.5), round(lat+0.5)];
-    LON = [round(lon-0.5), round(lon+0.5)];
+    LAT = [floor(lat-0.5), ceil(lat+0.5)];
+    LON = [floor(lon-0.5), ceil(lon+0.5)];
     
     if ~isdir('hgt')
         mkdir('hgt');
     end
     
-    R = readhgt(LAT, LON, 'interp', 'outdir', 'hgt/');
+    % http funktioniert irgendwie nicht mehr
+    R = readhgt([LAT, LON], 'interp', 'outdir', 'hgt','url', 'https://dds.cr.usgs.gov/srtm/version2_1');
     
     maxsteps = round(1440/delta_t);
     X = zeros(3, maxsteps);
@@ -84,7 +85,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     AREA([3 1]) = min(S,[],2) - 0.05;
     AREA([4 2]) = max(S,[],2) + 0.05;
     
-    readhgt(AREA, 'outdir', 'hgt/');
+    readhgt(AREA, 'outdir', 'hgt', 'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
     hold on;
     plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
     hold off;
