@@ -1,5 +1,5 @@
 figure;
-[X, Y, Z] = sphere(110);
+% [X, Y, Z] = sphere(110);
 earth_rad = 6371000;
 earth_rad_klein = earth_rad - 1;
 
