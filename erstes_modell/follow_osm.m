@@ -110,7 +110,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                 % finde ersten <node>-Tag in xml-Daten
                 indices = strfind(remote_xml, '<node');
                 if size(indices, 2) == 0
-                    warning('OSM Data does not appear to contain nodes!');
+                    fprintf('OSM Data does not appear to contain nodes! Try different coordinates.\n');
                     break;
                 end
                 idx_xml = indices(1);
