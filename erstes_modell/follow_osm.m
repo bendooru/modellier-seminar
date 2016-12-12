@@ -51,7 +51,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
-        if boundaryDistance(coord, bounds) < 0.0005
+        if boundaryDistance(coord, bounds) < 0.0009
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
             local_map_found = false;
@@ -94,13 +94,15 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                     '%s/api/interpreter?data=(way["highway"](%f,%f,%f,%f);>;);out;', ...
                     'http://overpass-api.de', bounds);
 
+                fprintf('[%2d] Querying API ... ', maps_used);
                 tic;
                 % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
                 % kurz
-                remote_xml = webread(api_name, 'Timeout', 20);
+                options = weboptions('Timeout', 20);
+                remote_xml = webread(api_name, options);
                 time = toc;
 
-                fprintf('[%2d] API query completed.        [%9.6f s]\n', maps_used, time);
+                fprintf('done.                     [%9.6f s]\n', time);
 
                 % finde ersten <node>-Tag in xml-Daten
                 indices = strfind(remote_xml, '<node');
@@ -133,18 +135,20 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
+            fprintf('   * Parsing data ... ');
             tic;
             [parsed_osm, ~] = parse_openstreetmap(filename);
             time = toc;
-            fprintf('   * Parsed data.                [%9.6f s]\n', time);
+            fprintf('done.                     [%9.6f s]\n', time);
 
+            fprintf('   * Creating adjacency matrix ... ');
             tic;
             % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
             % Matrix
             % extract_connectivity liefert eine unvollständige Matrix
             adj_matrix = adjacencyMatrix(parsed_osm);
             time = toc;
-            fprintf('   * Created adjacency matrix.   [%9.6f s]\n', time);
+            fprintf('done.        [%9.6f s]\n', time);
             
             % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert haben
             node_idx = findNearestVec(coord, parsed_osm.node.xy);
@@ -256,6 +260,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     hold(ax, 'off');
     xlabel(ax, 'Longitude (°)');
     ylabel(ax, 'Latidude (°)');
+    title(ax, datestr(datetime('2000-12-31') + tag, 'mmmm dd'));
     
     % Plotte zurückgelegte Distanz über Zeit
     % bisher: bleiben zu oft in Sackgassen etc hängen; teilweise über mehrere Stunden
