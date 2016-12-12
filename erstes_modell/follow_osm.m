@@ -30,15 +30,18 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     step = 1;
     
     node_idx_prev = -1;
-    coord_prev = [0;0];
+    coord_prev = [0; 0];
+    prev_init = false;
     
     maps_used = 0;
     
     % figure in die die Karte geplottet wird
     fig = figure;
     ax = axes('Parent', fig);
+    axis(ax, 'equal');
     hold(ax, 'on');
     
+    % Format für Karten-Dateinamen
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
     
     if ~isdir('maps')
@@ -46,15 +49,15 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     end
     
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
-    while t < t_end && visible
+    while visible && t < t_end
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
         if boundaryDistance(coord, bounds) < 0.0005
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
             local_map_found = false;
-            % suche nach .osm Dateien im Unterverzeichnis maps
-            osm_files = dir('maps/*.osm');
             
+            % suche nach .osm Dateien im Unterverzeichnis maps
+            osm_files = dir(fullfile('maps', '*.osm'));
             numfiles = size(osm_files, 1);
             
             if numfiles > 0
@@ -62,22 +65,21 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                 map_dist = zeros(1, numfiles);
                 for i = 1:numfiles
                     % parse Bounding Box aus Dateinamen heraus; transponieren!
-                    map_bounds(i, :) = sscanf(osm_files(i).name, ...
-                        map_filename_spec)';
+                    map_bounds(i, :) = sscanf(osm_files(i).name, map_filename_spec)';
                     
                     % Distanz zu Grenzen der Bounding Box (Unendlich-Norm)
                     map_dist(1, i) = boundaryDistance(coord, map_bounds(i, :));
                 end
                 
                 % wollen Karte, in der jetzige Koordinaten am 'innersten' liegen
-                [maxd, didx] = max(map_dist);
+                [max_dist, dist_idx] = max(map_dist);
                 
-                % Startpunkt liegt innerhalb lokaler Karte und liegt nicht zu
-                % nah an der Grenze
-                if maxd > 0.001
+                % Startpunkt liegt innerhalb lokaler Karte und liegt nicht zu nah an der
+                % Grenze
+                if max_dist > 0.001
                     local_map_found = true;
-                    filename = sprintf('maps/%s', osm_files(didx).name);
-                    bounds = map_bounds(didx, :);
+                    filename = fullfile('maps', osm_files(dist_idx).name);
+                    bounds = map_bounds(dist_idx, :);
                     
                     fprintf('[%2d] Local map found.\n', maps_used);
                     fprintf('   > Filename is %s.\n', filename);
@@ -87,18 +89,18 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
             % haben keine geeignete Karte lokal gespeichert
             if ~local_map_found
                 bounds = [lat-br_lat lon-br_lon lat+br_lat lon+br_lon];
+                % sende Anfrage an Overpass-API
                 api_name = sprintf(...
                     '%s/api/interpreter?data=(way["highway"](%f,%f,%f,%f);>;);out;', ...
                     'http://overpass-api.de', bounds);
 
                 tic;
-                % größere Anfragen brauchen ggf. länger, Default-Timeout von
-                % 5sec ist zu kurz
+                % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
+                % kurz
                 remote_xml = webread(api_name, 'Timeout', 20);
                 time = toc;
 
-                fprintf('[%2d] API query completed.        [%9.6f s]\n', ...
-                    maps_used, time);
+                fprintf('[%2d] API query completed.        [%9.6f s]\n', maps_used, time);
 
                 % finde ersten <node>-Tag in xml-Daten
                 indices = strfind(remote_xml, '<node');
@@ -108,22 +110,23 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
                 end
                 idx_xml = indices(1);
 
-                % xml-Daten müssen manipuliert werden, um vom Parser akzeptiert zu
-                % werden: benötigt ein Bounds-Feld
+                % xml-Daten müssen manipuliert werden, um vom Parser akzeptiert zu werden:
+                % benötigt ein <bounds>-Feld
                 remote_xml = sprintf(...
                     '%s<bounds minlat="%f" minlon="%f" maxlat="%f" maxlon="%f"/>\n  %s', ...
                     remote_xml(1:idx_xml-1), bounds, remote_xml(idx_xml:end));
 
-                % Generiere (weitestgehend) eindeutigen Dateinamen für
-                % Straßendaten und schreibe xml in die Datei
+                % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
+                % schreibe xml in die Datei
                 filename = fullfile('maps', sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    error('Irgendwas stimmt mit fopen nicht.\n%s wird nicht als filename akzeptiert.', ...
-                        filename);
+                    error('%s konnte nicht geöffnet werden.', filename);
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
+                
+                clear remote_xml api_name;
                 
                 fprintf('   > Saving to %s.\n', filename);
             end
@@ -136,17 +139,14 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
             fprintf('   * Parsed data.                [%9.6f s]\n', time);
 
             tic;
-            % Eigene Function für Adjazenzmatrix
+            % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
+            % Matrix
             % extract_connectivity liefert eine unvollständige Matrix
             adj_matrix = adjacencyMatrix(parsed_osm);
-            % Symmetrisch machen -> ungerichteter Graph
-            % müssen uns so nicht um RIchtung der Wege kümmern
-            dg = or(adj_matrix, adj_matrix.');
             time = toc;
             fprintf('   * Created adjacency matrix.   [%9.6f s]\n', time);
             
-            % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert
-            % haben
+            % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert haben
             node_idx = findNearestVec(coord, parsed_osm.node.xy);
             node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
             
@@ -166,94 +166,107 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
         end
         
         % Indizes aller adjazenten Knoten
-        neighbor_idxs = find(dg(:, node_idx));
+        neighbor_idxs = find(adj_matrix(:, node_idx));
         num_neighbors = size(neighbor_idxs, 1);
         
-        % benutze bereits geschriebene Funktion um die optimale Laufrichtung
-        % Richtung Sonne zu bestimmen
-        [richtung_optimal, visible] = ...
-            earth_path(p, t, delta_t, speed, earth_radius);
+        if num_neighbors == 0
+            fprintf('Knoten hat keine Nachbarn!\n');
+            break;
+        end
         
-        % normiere
-        richtung_optimal = (richtung_optimal - p)/norm(richtung_optimal-p);
+        % benutze bereits geschriebene Funktion um die optimale nächste Position zu
+        % bestimmen
+        [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
+        
+        % normiere, intepretiere als relative Richtung
+        richtung_optimal = (p_optimal - p)/norm(p_optimal-p);
         
         % wollen 3d-Richtungen in Richtung der Nachbarsknoten bestimmen
-        richtung_neighbor = zeros(3, num_neighbors);
-        colinear_neighbor = zeros(1, num_neighbors);
+        vec_neighbor = zeros(3, num_neighbors);
+        dot_neighbor = zeros(1, num_neighbors);
         
         for i = 1:num_neighbors
-            % bestimme 3d-Position und normalisierte Gang-Richtung für jeden
-            % adjazenten Knoten
-            richtung_neighbor(:, i) = osmnode2vec(neighbor_idxs(i));
+            % bestimme 3d-Position und normalisierte Gang-Richtung für jeden adjazenten
+            % Knoten
+            vec_neighbor(:, i) = osmnode2vec(neighbor_idxs(i));
             
-            norm_neighbor = norm(richtung_neighbor(:,i) - p);
+            norm_neighbor = norm(vec_neighbor(:,i) - p);
+            
+            % sollte nicht auftreten
             if norm_neighbor == 0
                 r_neighbor = zeros(3,1);
             else
-                r_neighbor = (richtung_neighbor(:,i) - p)/norm_neighbor;
+                r_neighbor = (vec_neighbor(:,i) - p)/norm_neighbor;
             end
             
             % Skalarprodukt, um Kolinearität der Richtungen zu ermitteln
-            colinear_neighbor(1,i) = dot(richtung_optimal, r_neighbor);
+            % intuitiv stimmt hier noch irgendetwas nicht
+            dot_neighbor(1,i) = dot(richtung_optimal, r_neighbor);
         end
         
-        [max_colinear, max_index] = max(colinear_neighbor);
-            
+        [max_colinear, max_index] = max(dot_neighbor);
+        
+        distance_step = norm(vec_neighbor(:,max_index) - p);
+        
         step = step + 1;
         
-        % Gehe Straße einfach weiter, wenn keine Kreuzung
-        % für step == 2 ist node_id_prev nicht sinnvoll initialisiert, also
-        % übergehe diesen Fall
-        if num_neighbors == 2 && step > 2
-            node_id_new = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
+        % Gehe Straße einfach weiter, wenn keine Kreuzung vor erster richtigen Bewegung
+        % ist node_idx_prev nicht sinnvoll initialisiert, also übergehe diesen Fall
+        if num_neighbors == 2 && prev_init
+            node_idx_new = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
             node_idx_prev = node_idx;
-            node_idx = node_id_new;
+            node_idx = node_idx_new;
             
-            distance = norm(richtung_neighbor(:,max_index) - p);
-            p = richtung_neighbor(:,max_index);
+            distance_step = norm(osmnode2vec(node_idx)-p);
+            
+            % Obiger max-Index sagt hier nichts aus
+            p = osmnode2vec(node_idx);
             coord_prev = coord;
             coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
             
-            t = t + distance/speed;
-        % Nächstbeste Straße sollte nicht von Sonne weg führen
-        % fängt gleichzeitig 'Bewegungen' mit Distanz 0 ab
-        elseif max_colinear > 0
+            t = t + distance_step/speed;
+        % Nächstbeste Straße sollte nicht von Sonne weg führen fängt gleichzeitig
+        % 'Bewegungen' mit Distanz 0 ab
+        elseif max_colinear > 0 && distance_step > 0
             node_idx_prev = node_idx;
             node_idx = neighbor_idxs(max_index);
+            prev_init = true;
             
-            distance = norm(richtung_neighbor(:,max_index) - p);
-            p = richtung_neighbor(:,max_index);
+            p = vec_neighbor(:,max_index);
             coord_prev = coord;
             coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
             
-            t = t + distance/speed;
+            t = t + distance_step/speed;
         else
             t = t + delta_t;
-            distance = 0;
+            distance_step = 0;
+            % zum Debuggen!
+            plot(ax, X(1, step-1), X(2, step-1), 'ok');
         end
         
         X(:, step) = coord;
         T(1,step) = t;
-        D(1,step) = D(1,step-1) + distance;
+        D(1,step) = D(1,step-1) + distance_step;
     end
     
     % Plotte gefundene Route
     plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 2);
     hold(ax, 'off');
-    xlabel(ax, 'Longitude');
-    ylabel(ax, 'Latidude');
+    xlabel(ax, 'Longitude (°)');
+    ylabel(ax, 'Latidude (°)');
     
     % Plotte zurückgelegte Distanz über Zeit
-    % bisher: bleiben zu oft in Sackgassen etc hängen; teilweise über mehrere
-    % Stunden hinweg
-    figure; plot((T - T(1,1))./60, D./1000);
+    % bisher: bleiben zu oft in Sackgassen etc hängen; teilweise über mehrere Stunden
+    % hinweg
+    figure;
+    plot((T - T(1,1))./60, D./1000);
     xlabel('Time [h]');
     ylabel('Distance [km]');
     
-    % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch
-    % bnd in der Unendlich-Norm
+    % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der
+    % Unendlich-Norm
     function d = boundaryDistance(c, bnd)
         if any(c' < bnd([2 1])) || any(c' > bnd([4 3]))
             d = 0;
