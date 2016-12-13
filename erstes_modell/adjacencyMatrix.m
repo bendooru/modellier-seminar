@@ -14,10 +14,10 @@ function adjMat = adjacencyMatrix(parsed_osm)
             continue;
         end
         
-        idx_prev = node_ids == nodeset(1);
+        idx_prev = find(node_ids == nodeset(1,1));
         
-        for i = 1:size(nodeset, 2)
-            idx = node_ids == nodeset(1,i);
+        for i = 2:size(nodeset, 2)
+            idx = find(node_ids == nodeset(1,i));
             % Matrix bereits an dieser Stelle symmetrisch machen
             adjMat(idx_prev, idx) = 1;
             adjMat(idx, idx_prev) = 1;
@@ -26,6 +26,7 @@ function adjMat = adjacencyMatrix(parsed_osm)
         end
     end
     
+    % sicherheitshalber Zykel mit nur einem Knoten entfernen
     for i = 1:size(node_ids, 2)
         adjMat(i,i) = 0;
     end
