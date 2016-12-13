@@ -1,6 +1,7 @@
-function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
+function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
+    % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -272,9 +273,9 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag)
     title(ax, datestr(datetime('2000-12-31') + tag, 'mmmm dd'));
     fprintf('done.\n');
     
-    % Plotte zurückgelegte Distanz über Zeit
+    % Plotte zurückgelegte Distanz über Zeit (nur wenn 'TimePlot' als Argument übergeben)
     % bisher: bleiben zu oft in Sackgassen etc hängen;
-    if size(T, 2) > 0
+    if any(strcmpi('TimePlot', varargin)) && size(T, 2) > 0
         figure;
         plot((T - T(1,1))./60, D./1000);
         xlabel('Time [h]');
