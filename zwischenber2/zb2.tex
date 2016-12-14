@@ -64,6 +64,8 @@
             \end{equation*}
             wobei $v$ die Geschwindigkeit, $dh$ der Höhenunterschied und $dx$ die
             vertikal zurückgelegte Distanz sind
+        \item Implementierung: gehen feste vertikale Distanz, bestimmen verstrichene Zeit
+        \item bleiben bei zu geringer Geschwindigkeit stehen, da Steigung zu groß
     \end{itemize}
 \end{frame}
 
@@ -104,18 +106,38 @@
         \item verwenden opentreetmapfunctions, um OSM-XML in Matlab-Struct zu speichern
         \item[]$\rightarrow$ Verkehrsnetz in Adjazenzmatrix des ungerichteten Graphen
             dargestellt
-        \item[]$\rightarrow$ Nachbarn eines Knoten leicht bestimmbar: zwei
+        \item Nachbarn eines Knoten leicht bestimmbar: zwei
             Verhaltensweisen:
             \begin{itemize}
                 \item Knoten hat zwei Nachbarn: merken uns Vorgänger und wählen
                     Nicht-Vorgänger als nächsten Knoten
                 \item[]$\rightarrow$ gehen bis zur nächsten Kreuzung, ohne umzudrehen
-                \item sonst betrachte Richtungsvektoren zu allen Nachbaren (im $\mathbb
+                \item sonst betrachte Richtungsvektoren zu allen Nachbarn (im $\mathbb
                     R^3$), bestimme optimale Gangrichtung, wähle optimalen Nachbarn mit
                     Skalarprodukt
                 \item[]$\rightarrow$ falls alle Produkte $<0$, liegt Sonne bei jeder
                     Bewegung im Rücken, tue also nichts
             \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Beispiel}
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.95\textwidth]{bilder/klplot2.jpg}
+        \caption{Sackgassen und Zykel machen Route ungünstig}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Weiteres Vorgehen}
+    \begin{itemize}
+        \item Höhendaten und OpenStreetMap-Daten kombinieren
+        \item festgelegte Pausenzeiten und Geschwindigkeitsvarianzen einbinden
+        \item Verhalten in Sackgassen optimieren (zurückgehen und Alternativweg finden)
+        \item Pausen und Geschwindigkeiten automatisch anhand von Ausdauer und
+            Erschöpfungsgrad bestimmen. (In Sackgassen günstigere Sonnenpostion abwarten?)
     \end{itemize}
 \end{frame}
 
