@@ -32,6 +32,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     S = zeros(2, maxsteps);
     V = zeros(1, maxsteps);
     E = zeros(1, maxsteps);
+    T = zeros(1, maxsteps);
     i = 1;
     
     % erster Schritt außerhalb der Schleife
@@ -49,6 +50,7 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
         [S(1,i), S(2, i), ~] = cart2sph(X(1,i), X(2,i), X(3,i));
         S(:,i) = rad2deg(S(:,i));
         E(i) = get_elevation(S(1,i), S(2,i));
+        T(i-1) = t;
         
         % Zeit, um Höhenunterschied zu überbrücken
         % siehe Tobler's hiking function
@@ -79,7 +81,8 @@ function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     % entferne überschüssige 0-Elemente
     S = S(:,1:i);
     E = E(:,1:i);
-    figure; plot(V(:,1:i-1));
+    T = T(:,1:i-1);
+    figure; plot(T, V(:,1:i-1));
     AREA = zeros(1,4);
     % verkleinere umschließendes Rechteck
     AREA([3 1]) = min(S,[],2) - 0.05;
