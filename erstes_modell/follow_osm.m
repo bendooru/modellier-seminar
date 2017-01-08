@@ -45,6 +45,9 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
         mkdir('maps');
     end
     
+    sackgassen_uuid = zeros(1,0);
+    ist_sackgasse = false;
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
@@ -78,7 +81,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                     filename = fullfile('maps', osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
                     
-                    fprintf('[%2d] Local map found.\n', maps_used);
+                    fprintf('[%3d] Local map found.\n', maps_used);
                     fprintf('   > Filename is %s.\n', filename);
                 end
             end
@@ -88,10 +91,10 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                 bounds = [lat-br_lat lon-br_lon lat+br_lat lon+br_lon];
                 % sende Anfrage an Overpass-API
                 api_name = sprintf(...
-                    '%s/api/interpreter?data=(way["highway"](%f,%f,%f,%f);>;);out;', ...
+                    '%s/api/interpreter?data=[bbox:%f,%f,%f,%f];(way["highway"];>;);out;', ...
                     'http://overpass-api.de', bounds);
 
-                fprintf('[%2d] Querying API ... ', maps_used);
+                fprintf('[%3d] Querying API ... ', maps_used);
                 tic;
                 % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
                 % kurz
@@ -108,20 +111,6 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
 
                 fprintf('done.                     [%9.6f s]\n', time);
 
-                % finde ersten <node>-Tag in xml-Daten
-                indices = strfind(remote_xml, '<node');
-                if size(indices, 2) == 0
-                    fprintf('OSM Data does not appear to contain nodes! Try different coordinates.\n');
-                    break;
-                end
-                idx_xml = indices(1);
-
-                % xml-Daten müssen manipuliert werden, um vom Parser akzeptiert zu werden:
-                % benötigt ein <bounds>-Feld
-                remote_xml = sprintf(...
-                    '%s<bounds minlat="%f" minlon="%f" maxlat="%f" maxlon="%f"/>\n  %s', ...
-                    remote_xml(1:idx_xml-1), bounds, remote_xml(idx_xml:end));
-
                 % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
                 % schreibe xml in die Datei
                 filename = fullfile('maps', sprintf(map_filename_spec, bounds));
@@ -134,18 +123,24 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                 
                 clear remote_xml api_name;
                 
-                fprintf('   > Saving to %s.\n', filename);
+                fprintf('    > Saving to %s.\n', filename);
             end
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
             fprintf('   * Parsing data ... ');
-            tic;
-            [parsed_osm, ~] = parse_openstreetmap(filename);
-            time = toc;
-            fprintf('done.                     [%9.6f s]\n', time);
+            try
+                tic;
+                [parsed_osm, ~] = parse_openstreetmap(filename);
+                time = toc;
+                fprintf('done.                     [%9.6f s]\n', time);
+            catch
+                [~] = toc;
+                fprintf(' FAILED.\n');
+                break;
+            end
 
-            fprintf('   * Creating adjacency matrix ... ');
+            fprintf('    * Creating adjacency matrix ... ');
             tic;
             % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
             % Matrix
@@ -185,6 +180,20 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
         if num_neighbors == 0
             fprintf('Knoten hat keine Nachbarn!\n');
             break;
+        elseif num_neighbors == 1
+            ist_sackgasse = true;
+            node_idx_new = neighbor_idxs(1);
+            node_idx_prev = node_idx;
+            node_idx = node_idx_new;
+            
+            p = osmnode2vec(node_idx);
+            distance_step = norm(p - osmnode2vec(node_idx_prev));
+            
+            coord_prev = coord;
+            coord = parsed_osm.node.xy(:,node_idx);
+            lon = coord(1); lat = coord(2);
+            
+            t = t + distance_step/speed;
         elseif num_neighbors == 2 && prev_init
             % Gehe Straße entlang, wenn keine Kreuzung. Vor erster richtigen Bewegung
             % ist node_idx_prev nicht sinnvoll initialisiert, also übergehe diesen Fall
@@ -202,6 +211,23 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
             
             t = t + distance_step/speed;
         else
+            % Sackgasseneingang merken
+            if ist_sackgasse
+                sackgassen_uuid(1,end+1) = parsed_osm.node.id(node_idx);
+            end
+            
+            % Indizes der Knoten, die einen Sackgasseneingang markieren
+            [~, remove_idxs, ~] = intersect(parsed_osm.node.id(neighbor_idxs), ...
+                sackgassen_uuid);
+            
+            neighbor_idxs(remove_idxs) = [];
+            num_neighbors = size(neighbor_idxs, 1);
+            
+            if num_neighbors == 0
+                fprintf('All streets are dead ends, stopping.\n');
+                break;
+            end
+            
             % benutze bereits geschriebene Funktion earth_path um die optimale nächste
             % Position zu bestimmen
             [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
