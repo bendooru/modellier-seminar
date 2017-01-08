@@ -20,8 +20,8 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     D = zeros(1,0);
     
     % Abstand zu Grenzen in Längen-/Breitengraden
-    br_lat = 0.008;
-    br_lon = 0.012;
+    br_lat = 0.007;
+    br_lon = 0.01;
     
     % Initialisiere Bounding Box als Punkt
     bounds = [lat lon lat lon];
@@ -51,7 +51,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
-        if boundaryDistance(coord, bounds) < 0.0009
+        if boundaryDistance(coord, bounds) < 0.0007
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
             local_map_found = false;
@@ -82,7 +82,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                     bounds = map_bounds(dist_idx, :);
                     
                     fprintf('[%3d] Local map found.\n', maps_used);
-                    fprintf('   > Filename is %s.\n', filename);
+                    fprintf('    > Filename is %s.\n', filename);
                 end
             end
             
@@ -128,7 +128,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
-            fprintf('   * Parsing data ... ');
+            fprintf('    * Parsing data ... ');
             try
                 tic;
                 [parsed_osm, ~] = parse_openstreetmap(filename);
