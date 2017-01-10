@@ -79,7 +79,7 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     bounds = map_bounds(dist_idx, :);
                     
                     fprintf('[%3d] Local map found.\n', maps_used);
-                    fprintf('   > Filename is %s.\n', filename);
+                    fprintf('    > Filename is %s.\n', filename);
                 end
             end
             
@@ -154,6 +154,47 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
         
         if map_nonempty
             % überprüfe auf Kollisionen
+            collision_found = false;
+            
+            for way = parsed_osm.way.nd
+                waysize = size(way{1}, 2);
+                wayxy = zeros(2, waysize);
+                for ndi = 1:waysize
+                    wayxy(:, ndi) = parsed_osm.node.xy(:, ...
+                        parsed_osm.node.id == way{1}(1, ndi));
+                end
+                
+                for ndi = 1:waysize
+                    % Prüfe mit linearer Algebra, ob wir einen way übertreten
+                    if ndi == 1
+                        ndi_prev = waysize;
+                    else
+                        ndi_prev = ndi - 1;
+                    end
+                    
+                    A = [coord-X(:,step-1), wayxy(:,ndi_prev)-wayxy(:,ndi)];
+                    
+                    if det(A) == 0
+                        % Laufen parallel zu betrachtetem Wegsegment
+                        continue;
+                    end
+                    
+                    b = wayxy(:,ndi_prev) - X(:,step-1);
+                    sol = A\b;
+                    
+                    % Kollision liegt auf dem Laufweg
+                    if sol(1) >= 0 && sol(1) <= 1
+                        coord = (coord - X(:,step-1))*sol(1) + X(:,step-1);
+                        p = lonlat2vec(coord(1), coord(2), earth_radius);
+                        collision_found = true;
+                        break;
+                    end
+                end
+                
+                if collision_found
+                    break;
+                end
+            end
         end
         
         t = t + delta_t;
