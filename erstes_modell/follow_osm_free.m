@@ -138,6 +138,8 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
                 fprintf('done.                     [%9.6f s]\n', time);
+                
+                plot_streets(ax, parsed_osm);
             catch
                 [~] = toc;
                 fprintf('empty map.\n');
@@ -183,7 +185,7 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     sol = A\b;
                     
                     % Kollision liegt auf dem Laufweg
-                    if sol(1) >= 0 && sol(1) <= 1
+                    if all(sol >= 0) && all(sol <= 1)
                         coord = (coord - X(:,step-1))*sol(1) + X(:,step-1);
                         p = lonlat2vec(coord(1), coord(2), earth_radius);
                         collision_found = true;
