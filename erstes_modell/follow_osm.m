@@ -1,4 +1,4 @@
-function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
+function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
@@ -15,13 +15,24 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     
     % initialisiere Arrays leer, werden dynamisch vergrößert:
     % Folge der besuchten Koordinaten, betrachtete Zeitpunkte und zurückgelegte Distanz
-    X = zeros(2,0);
-    T = zeros(1,0);
-    D = zeros(1,0);
+    X = coord;
+    T = t;
+    D = 0;
     
+    if mod(size(fitness.walkpause, 2), 2) ~= 0
+        fprintf('Array specifiying walkling/pausing times has incorrect size');
+        exit;
+    end
+    
+    endlastbreak = t;
+    fnpperiod = size(fitness.walkpause, 2)/2;
+    fnfperiod = size(fitness.f, 2);
+    
+    pauseidx = 1;
+   
     % Abstand zu Grenzen in Längen-/Breitengraden
-    br_lat = 0.007;
-    br_lon = 0.01;
+    br_lat = 0.006;
+    br_lon = 0.009;
     
     % Initialisiere Bounding Box als Punkt
     bounds = [lat lon lat lon];
@@ -50,6 +61,24 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
+        pi = mod(pauseidx - 1, fnpperiod) + 1;
+        
+        % überprüfe, ob wir Pause machen wollen
+        if t - endlastbreak > fitness.walkpause(1, 2*pi-1)
+            t = t + fitness.walkpause(1, 2*pi);
+            endlastbreak = t;
+            pauseidx = pauseidx + 1;
+            
+            step = step + 1;
+            X(:, step) = X(:, step-1);
+            T(1, step) = t;
+            D(1, step) = D(1, step-1);
+            
+%             [~, visible] = earth_path(p, t, delta_t, speed, earth_radius);
+            
+            continue;
+        end
+        
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
         if boundaryDistance(coord, bounds) < 0.0007
             % Distanz zu Grenze ist gering, lade neue Karte
@@ -156,32 +185,26 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                 node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
             end
             
-            if step == 1
-                % im ersten Schritt müssen Daten initialisiert werden
-                p = osmnode2vec(node_idx);
-                coord = parsed_osm.node.xy(:,node_idx);
-                lon = coord(1); lat = coord(2);
-
-                X(:,step) = coord;
-                T(step) = t;
-                D(step) = 0;
-            end
-            
             % Geladenes Straßennetz plotten
             plot_streets(ax, parsed_osm);
         end
+        
+        step = step + 1;
+        
+        speed = fitness.f{mod(pauseidx - 1, fnfperiod) + 1}(t - endlastbreak);
         
         % Indizes aller adjazenten Knoten
         neighbor_idxs = find(adj_matrix(:, node_idx));
         num_neighbors = size(neighbor_idxs, 1);
         
         % Betrachte zunächst die Fälle, wenn keine oder genau zwei Nachbarn existieren
-        % TODO: Fall nur 1 Nachbar (d.h. Sackgasse)
         if num_neighbors == 0
             fprintf('Knoten hat keine Nachbarn!\n');
             break;
         elseif num_neighbors == 1
             ist_sackgasse = true;
+            
+            plot(ax, coord(1), coord(2), 'og');
             node_idx_new = neighbor_idxs(1);
             node_idx_prev = node_idx;
             node_idx = node_idx_new;
@@ -214,6 +237,7 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
             % Sackgasseneingang merken
             if ist_sackgasse
                 sackgassen_uuid(1,end+1) = parsed_osm.node.id(node_idx);
+                ist_sackgasse = false;
             end
             
             % Indizes der Knoten, die einen Sackgasseneingang markieren
@@ -279,11 +303,9 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
                 t = t + delta_t;
                 distance_step = 0;
                 % zum Debuggen!
-                plot(ax, X(1, end), X(2, end), '.k', 'Linewidth', 4);
+                plot(ax, X(1, end), X(2, end), 'ok', 'Linewidth', 4);
             end
         end
-        
-        step = step + 1;
         
         X(:, step) = coord;
         T(1,step) = t;
@@ -300,7 +322,6 @@ function [X, ax] = follow_osm(lon, lat, delta_t, speed, tag, varargin)
     fprintf('done.\n');
     
     % Plotte zurückgelegte Distanz über Zeit (nur wenn 'TimePlot' als Argument übergeben)
-    % bisher: bleiben zu oft in Sackgassen etc hängen;
     if any(strcmpi('TimePlot', varargin)) && size(T, 2) > 0
         figure;
         plot((T - T(1,1))./60, D./1000);
