@@ -1,4 +1,4 @@
-function [S, E] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
+function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     earth_rad = 6371000;
     
     % einfacher Schalter, um Geschwindigkeit konstant zu machen
