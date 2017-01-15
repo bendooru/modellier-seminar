@@ -2,9 +2,11 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
+    % übergib 'Animate' als letztes Argument, um den Plot der gefundenen Route zu animeren
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
+    coord_prev = coord;
     earth_radius = 6371000;
     
     % Werte initialisieren
@@ -13,7 +15,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % maximal einen Tag lang
     t_end = t + 1440;
     
-    % initialisiere Arrays leer, werden dynamisch vergrößert:
+    % initialisiere Arrays, werden dynamisch vergrößert:
     % Folge der besuchten Koordinaten, betrachtete Zeitpunkte und zurückgelegte Distanz
     X = coord;
     T = t;
@@ -38,9 +40,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     bounds = [lat lon lat lon];
     
     step = 1;
-    
-    prev_init = false;
-    
     maps_used = 0;
     
     % figure in die die Karte geplottet wird
@@ -51,9 +50,10 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     % Format für Karten-Dateinamen
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
+    map_dir_name = 'maps';
     
-    if ~isdir('maps')
-        mkdir('maps');
+    if ~isdir(map_dir_name)
+        mkdir(map_dir_name);
     end
     
     sackgassen_uuid = zeros(1,0);
@@ -61,11 +61,12 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
-        pi = mod(pauseidx - 1, fnpperiod) + 1;
+        % interpretiere die Laufzeit-Pause-Liste als zyklisch
+        pidx = mod(pauseidx - 1, fnpperiod) + 1;
         
         % überprüfe, ob wir Pause machen wollen
-        if t - endlastbreak > fitness.walkpause(1, 2*pi-1)
-            t = t + fitness.walkpause(1, 2*pi);
+        if t - endlastbreak > fitness.walkpause(1, 2*pidx-1)
+            t = t + fitness.walkpause(1, 2*pidx);
             endlastbreak = t;
             pauseidx = pauseidx + 1;
             
@@ -73,9 +74,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             X(:, step) = X(:, step-1);
             T(1, step) = t;
             D(1, step) = D(1, step-1);
-            
-%             [~, visible] = earth_path(p, t, delta_t, speed, earth_radius);
-            
             continue;
         end
         
@@ -86,7 +84,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             local_map_found = false;
             
             % suche nach .osm Dateien im Unterverzeichnis maps
-            osm_files = dir(fullfile('maps', '*.osm'));
+            osm_files = dir(fullfile(map_dir_name, '*.osm'));
             numfiles = size(osm_files, 1);
             
             if numfiles > 0
@@ -107,7 +105,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 % Grenze
                 if max_dist > 0.001
                     local_map_found = true;
-                    filename = fullfile('maps', osm_files(dist_idx).name);
+                    filename = fullfile(map_dir_name, osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
                     
                     fprintf('[%3d] Local map found.\n', maps_used);
@@ -127,7 +125,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 tic;
                 % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
                 % kurz
-                options = weboptions('Timeout', 20);
+                options = weboptions('Timeout', 25);
                 % Verbindungsfehler abfangen
                 try
                     remote_xml = webread(api_name, options);
@@ -142,10 +140,11 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
 
                 % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
                 % schreibe xml in die Datei
-                filename = fullfile('maps', sprintf(map_filename_spec, bounds));
+                filename = fullfile(map_dir_name, sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    error('%s konnte nicht geöffnet werden.', filename);
+                    fprintf('%s cannot be opened as a file. Aborting.\n', filename);
+                    break;
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
@@ -173,7 +172,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             tic;
             % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
             % Matrix
-            % extract_connectivity liefert eine unvollständige Matrix
             adj_matrix = adjacencyMatrix(parsed_osm);
             time = toc;
             fprintf('done.        [%9.6f s]\n', time);
@@ -181,9 +179,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert haben
             % diese Methode ist potentiell ungenau
             node_idx = findNearestVec(coord, parsed_osm.node.xy);
-            if prev_init
-                node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
-            end
+            node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
             
             % Geladenes Straßennetz plotten
             plot_streets(ax, parsed_osm);
@@ -195,116 +191,91 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         
         % Indizes aller adjazenten Knoten
         neighbor_idxs = find(adj_matrix(:, node_idx));
+        [~, remove_idxs, ~] = intersect(parsed_osm.node.id(neighbor_idxs), ...
+            sackgassen_uuid);
+        neighbor_idxs(remove_idxs) = [];
         num_neighbors = size(neighbor_idxs, 1);
         
-        % Betrachte zunächst die Fälle, wenn keine oder genau zwei Nachbarn existieren
+        colinear_lower_bound = 0;
+        
+        % Betrachte zunächst die Fälle, wenn keine, einer oder genau zwei Nachbarn
+        % existieren
         if num_neighbors == 0
-            fprintf('Knoten hat keine Nachbarn!\n');
+            fprintf('Node has no non-dead end neighbors.\n');
             break;
         elseif num_neighbors == 1
             ist_sackgasse = true;
             
-            plot(ax, coord(1), coord(2), 'og');
-            node_idx_new = neighbor_idxs(1);
-            node_idx_prev = node_idx;
-            node_idx = node_idx_new;
-            
-            p = osmnode2vec(node_idx);
-            distance_step = norm(p - osmnode2vec(node_idx_prev));
-            
-            coord_prev = coord;
-            coord = parsed_osm.node.xy(:,node_idx);
-            lon = coord(1); lat = coord(2);
-            
-            t = t + distance_step/speed;
-        elseif num_neighbors == 2 && prev_init
-            % Gehe Straße entlang, wenn keine Kreuzung. Vor erster richtigen Bewegung
-            % ist node_idx_prev nicht sinnvoll initialisiert, also übergehe diesen Fall
-            node_idx_new = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
-            node_idx_prev = node_idx;
-            node_idx = node_idx_new;
-            
-            p_neu = osmnode2vec(node_idx);
-            distance_step = norm(p_neu-p);
-            
-            p = p_neu;
-            coord_prev = coord;
-            coord = parsed_osm.node.xy(:,node_idx);
-            lon = coord(1); lat = coord(2);
-            
-            t = t + distance_step/speed;
+            % zum debuggen!
+            plot(ax, coord(1), coord(2), '.g');
+
+            colinear_lower_bound = -2;
+        elseif num_neighbors == 2
+            % Gehe Straße entlang, wenn keine Kreuzung.
+            colinear_lower_bound = -2;
         else
             % Sackgasseneingang merken
             if ist_sackgasse
-                sackgassen_uuid(1,end+1) = parsed_osm.node.id(node_idx);
+                sackgassen_uuid(1,end+1) = parsed_osm.node.id(node_idx_prev);
                 ist_sackgasse = false;
             end
-            
-            % Indizes der Knoten, die einen Sackgasseneingang markieren
-            [~, remove_idxs, ~] = intersect(parsed_osm.node.id(neighbor_idxs), ...
-                sackgassen_uuid);
-            
-            neighbor_idxs(remove_idxs) = [];
+        end
+        
+        if num_neighbors == 2 || ist_sackgasse
+            neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
             num_neighbors = size(neighbor_idxs, 1);
+        end
             
-            if num_neighbors == 0
-                fprintf('All streets are dead ends, stopping.\n');
-                break;
-            end
-            
-            % benutze bereits geschriebene Funktion earth_path um die optimale nächste
-            % Position zu bestimmen
-            [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
+        % benutze bereits geschriebene Funktion earth_path um die optimale nächste
+        % Position zu bestimmen
+        [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
 
-            % betrachte relative Bewegungsrichtung, normiere
-            richtung_optimal = (p_optimal - p)/norm(p_optimal-p);
+        % betrachte relative Bewegungsrichtung, normiere
+        richtung_optimal = (p_optimal - p)/norm(p_optimal-p);
 
-            % wollen Bewegungen in Richtung der Nachbarsknoten bestimmen
-            vec_neighbor = zeros(3, num_neighbors);
-            dot_neighbor = zeros(1, num_neighbors);
+        % wollen Bewegungen in Richtung der Nachbarsknoten bestimmen
+        vec_neighbor = zeros(3, num_neighbors);
+        dot_neighbor = zeros(1, num_neighbors);
 
-            for i = 1:num_neighbors
-                % bestimme 3d-Position und normalisierte Gang-Richtung für jeden
-                % adjazenten Knoten
-                vec_neighbor(:, i) = osmnode2vec(neighbor_idxs(i));
+        for i = 1:num_neighbors
+            % bestimme 3d-Position und normalisierte Gang-Richtung für jeden
+            % adjazenten Knoten
+            vec_neighbor(:, i) = osmnode2vec(neighbor_idxs(i));
 
-                norm_neighbor = norm(vec_neighbor(:,i) - p);
+            norm_neighbor = norm(vec_neighbor(:,i) - p);
 
-                % sollte nicht auftreten
-                if norm_neighbor == 0
-                    r_neighbor = zeros(3,1);
-                else
-                    r_neighbor = (vec_neighbor(:,i) - p)/norm_neighbor;
-                end
-
-                % Skalarprodukt, um Kolinearität der Richtungen zu ermitteln
-                dot_neighbor(1,i) = dot(richtung_optimal, r_neighbor);
-            end
-
-            [max_colinear, max_index] = max(dot_neighbor);
-
-            distance_step = norm(vec_neighbor(:,max_index) - p);
-            
-            % Nächstbeste Straße sollte nicht von Sonne weg führen. Dies fängt
-            % gleichzeitig 'Bewegungen' mit Distanz 0 ab
-            if max_colinear > 0 && distance_step > 0
-                node_idx_prev = node_idx;
-                node_idx = neighbor_idxs(max_index);
-                prev_init = true;
-
-                p = vec_neighbor(:,max_index);
-                coord_prev = coord;
-                coord = parsed_osm.node.xy(:,node_idx);
-                lon = coord(1); lat = coord(2);
-
-                t = t + distance_step/speed;
+            % sollte nicht auftreten
+            if norm_neighbor == 0
+                r_neighbor = zeros(3,1);
             else
-                % Lasse zeit verstreichen, tue sonst nichts
-                t = t + delta_t;
-                distance_step = 0;
-                % zum Debuggen!
-                plot(ax, X(1, end), X(2, end), 'ok', 'Linewidth', 4);
+                r_neighbor = (vec_neighbor(:,i) - p)/norm_neighbor;
             end
+
+            % Skalarprodukt, um Kolinearität der Richtungen zu ermitteln
+            dot_neighbor(1,i) = dot(richtung_optimal, r_neighbor);
+        end
+
+        [max_colinear, max_index] = max(dot_neighbor);
+        
+        distance_step = norm(vec_neighbor(:,max_index) - p);
+        
+        % Nächstbeste Straße sollte nicht von Sonne weg führen.
+        if max_colinear > colinear_lower_bound
+            node_idx_prev = node_idx;
+            node_idx = neighbor_idxs(max_index);
+
+            p = vec_neighbor(:,max_index);
+            coord_prev = coord;
+            coord = parsed_osm.node.xy(:,node_idx);
+            lon = coord(1); lat = coord(2);
+
+            t = t + distance_step/speed;
+        else
+            % Lasse zeit verstreichen, tue sonst nichts
+            t = t + delta_t;
+            distance_step = 0;
+            % zum Debuggen!
+            plot(ax, X(1, end), X(2, end), '.k', 'Linewidth', 4);
         end
         
         X(:, step) = coord;
@@ -314,11 +285,31 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     % Plotte gefundene Route
     fprintf('\nFinished calculating route, plotting ... ');
-    plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 2);
-    hold(ax, 'off');
+
     xlabel(ax, 'Longitude (°)');
     ylabel(ax, 'Latidude (°)');
-    title(ax, datestr(datetime('2000-12-31') + tag, 'mmmm dd'));
+    datum = datestr(datetime('2000-12-31') + tag, 'mmmm dd');
+    title(ax, datum);
+    
+    % rufe follow_osm mit dem Argument 'Animate' am Ende auf, um die entstehende Route
+    % animiert zu plotten
+    if any(strcmpi('Animate', varargin))
+        h = animatedline('Color', 'r', 'LineWidth', 1.5);
+        p = plot(ax, X(1, 1), X(2, 1),'o','MarkerFaceColor','red');
+        
+        for i = 1:size(X, 2)
+            addpoints(h, X(1, i), X(2, i));
+            p.XData = X(1, i);
+            p.YData = X(2, i);
+            ax.Title.String = sprintf('%s [%5.1f min]', datum, T(1, i) - T(1, 1));
+            drawnow;
+        end
+    else
+        % normaler, sofortiger Plot
+        plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 1.5);
+    end
+    
+    hold(ax, 'off');
     fprintf('done.\n');
     
     % Plotte zurückgelegte Distanz über Zeit (nur wenn 'TimePlot' als Argument übergeben)
