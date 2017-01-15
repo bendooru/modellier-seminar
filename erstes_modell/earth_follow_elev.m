@@ -55,8 +55,7 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
         % Zeit, um Höhenunterschied zu überbrücken
         % siehe Tobler's hiking function
         if variable_speed
-            actual_speed = (6 *speed/5) * exp(-3.5*...
-                abs((E(i)-E(i-1))/(3*delta_t*speed/50)/1000 + 0.05));
+            actual_speed = (speed/6) * tobler( (E(i) - E(i-1))/(delta_t*speed) );
         else
             actual_speed = speed;
         end
@@ -93,11 +92,32 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
     hold off;
     
-    % finde zunächst nächstgelegenstes Element in in Koordinatenvektoren,
-    % anschließend gib Höhenwert an diesen Indizes aus
+    % Toblers Wanderfunktion in km/h
+    function v = tobler(slope)
+        v = 6 * exp( (-3.5) * abs(slope + 0.05));
+    end
+    
+    % interpoliere Höhe aus 4 umliegenden Punkten
     function elev = get_elevation(lon, lat)
-        idxlon = findNearest(lon, R.lon);
-        idxlat = findNearest(lat, R.lat);
-        elev = R.z(idxlat, idxlon);
+        idxlonleq = find(R.lon <= lon, 1, 'last');
+        lonleq = R.lon(idxlonleq);
+        idxlongeq = idxlonleq + 1;
+        longeq = R.lon(idxlongeq);
+        
+        idxlatleq = find(R.lat <= lat, 1, 'last');
+        latleq = R.lat(idxlatleq);
+        idxlatgeq = idxlatleq + 1;
+        latgeq = R.lat(idxlatgeq);
+        
+        lambda_lon = (longeq - lon)/(longeq - lonleq);
+        lambda_lat = (latgeq - lat)/(latgeq - latleq);
+        
+        mean_lonlatleq = lambda_lon*double(R.z(idxlatleq, idxlongeq)) ...
+            + (1-lambda_lon) * double(R.z(idxlatleq, idxlonleq));
+        
+        mean_lonlatgeq = lambda_lon*double(R.z(idxlatgeq, idxlongeq)) ...
+            + (1-lambda_lon) * double(R.z(idxlatgeq, idxlonleq));
+        
+        elev = lambda_lat * mean_lonlatgeq + (1-lambda_lat)*mean_lonlatleq;
     end
 end
