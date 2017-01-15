@@ -92,7 +92,8 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     'way["building"];', ...
                     'way["barrier"];', ...
                     'way["natural"="water"];', ...
-                    'way["waterway"];', ...
+                    'way["natural"="coastline"];', ...
+                    'way["waterway"="riverbank"];', ...
                     ');>;);out;'; ];
                 api_name = sprintf(...
                     '%s/api/interpreter?data=[bbox:%f,%f,%f,%f];%s', ...
@@ -120,7 +121,7 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                 filename = fullfile(map_dir_name, sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    error('%s konnte nicht geöffnet werden.', filename);
+                    error('%s cannot be opened as a file.', filename);
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
@@ -156,7 +157,7 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
         
         if map_nonempty
             % überprüfe auf Kollisionen
-            collision_found = false;
+            collisions = zeros(1,0);
             
             for way = parsed_osm.way.nd
                 waysize = size(way{1}, 2);
@@ -188,15 +189,18 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     if all(sol >= 0) && all(sol <= 1)
                         coord = (coord - X(:,step-1))*sol(1) + X(:,step-1);
                         p = lonlat2vec(coord(1), coord(2), earth_radius);
-                        collision_found = true;
-                        break;
+                        
+                        collisions(1, end+1) = sol(1);
                     end
                 end
-                
-                if collision_found
-                    break;
-                end
             end
+        end
+        
+        if size(collisions, 2) > 0
+            s = min(collisions);
+            
+            coord = (coord - X(:,step-1)) * 0.99 *s + X(:,step-1);
+            p = lonlat2vec(coord(1), coord(2), earth_radius);
         end
         
         t = t + delta_t;
