@@ -212,18 +212,19 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             colinear_lower_bound = -2;
         elseif num_neighbors == 2
             % Gehe Straße entlang, wenn keine Kreuzung.
+            neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
+            num_neighbors = size(neighbor_idxs, 1);
+
             colinear_lower_bound = -2;
         else
             % Sackgasseneingang merken
             if ist_sackgasse
                 sackgassen_uuid(1,end+1) = parsed_osm.node.id(node_idx_prev);
                 ist_sackgasse = false;
+                
+                neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
+                num_neighbors = size(neighbor_idxs, 1);
             end
-        end
-        
-        if num_neighbors == 2 || ist_sackgasse
-            neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
-            num_neighbors = size(neighbor_idxs, 1);
         end
             
         % benutze bereits geschriebene Funktion earth_path um die optimale nächste
