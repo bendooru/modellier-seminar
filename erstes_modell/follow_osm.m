@@ -1,9 +1,11 @@
 function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
-    % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
-    % übergib 'Animate' als letztes Argument, um den Plot der gefundenen Route zu animeren
-    % übergib 'Elevation' als letztes Argument, um Höhendatein einfließen zu lassen
+    % optionale Argumente:
+    % * 'TimePlot':  Distanz/Zeit plotten
+    % * 'Animate':   Plot der gefundenen Route animeren
+    % * 'Elevation': mit Höhendaten rechnen
+    % * 'LinePlot':  plotte Straßen aus Kartendaten anstatt OSM-Kacheln im Hintergrund
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -29,16 +31,8 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         return;
     end
     
-    if any(strcmpi(varargin, 'Elevation'))
-        consider_elevation = true;
-    else
-        consider_elevation = false;
-    end
-    if any(strcmpi(varargin, 'LinePlot'))
-        lineplot = true;
-    else
-        lineplot = false;
-    end
+    consider_elevation = any(strcmpi(varargin, 'Elevation'));
+    lineplot = any(strcmpi(varargin, 'LinePlot'));
     
     endlastbreak = t;
     fnpperiod = size(fitness.walkpause, 2)/2;
@@ -66,6 +60,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
     map_dir_name = 'maps';
     
+    % stelle sicher dass Verzeichnis existiert
     if ~isdir(map_dir_name)
         mkdir(map_dir_name);
     end
@@ -251,7 +246,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
 
         % betrachte relative Bewegungsrichtung, normiere
-        richtung_optimal = (p_optimal - p)/norm(p_optimal-p);
+        richtung_optimal = (p_optimal - p)/norm(p_optimal - p);
 
         % wollen Bewegungen in Richtung der Nachbarsknoten bestimmen
         vec_neighbor = zeros(3, num_neighbors);
