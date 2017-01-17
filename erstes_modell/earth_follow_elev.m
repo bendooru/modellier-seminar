@@ -25,7 +25,8 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     end
     
     % http funktioniert irgendwie nicht mehr
-    R = readhgt([LAT, LON], 'interp', 'outdir', 'hgt','url', 'https://dds.cr.usgs.gov/srtm/version2_1');
+    R = readhgt([LAT, LON], 'interp', 'outdir', 'hgt', ...
+        'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
     
     maxsteps = round(1440/delta_t);
     X = zeros(3, maxsteps);
@@ -66,7 +67,7 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
         % (3 ist elativ zufällig gewählt)
         % falss slope_delta zu groß, tue nichts da die Steigung nicht
         % überbrückbar ist
-        if actual_speed < 20
+        if actual_speed < 7
             % alles zurücksetzen
             X(:,i) = X(:,i-1);
             S(:,i) = S(:,i-1);
@@ -99,25 +100,6 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     
     % interpoliere Höhe aus 4 umliegenden Punkten
     function elev = get_elevation(lon, lat)
-        idxlonleq = find(R.lon <= lon, 1, 'last');
-        lonleq = R.lon(idxlonleq);
-        idxlongeq = idxlonleq + 1;
-        longeq = R.lon(idxlongeq);
-        
-        idxlatleq = find(R.lat <= lat, 1, 'last');
-        latleq = R.lat(idxlatleq);
-        idxlatgeq = idxlatleq + 1;
-        latgeq = R.lat(idxlatgeq);
-        
-        lambda_lon = (longeq - lon)/(longeq - lonleq);
-        lambda_lat = (latgeq - lat)/(latgeq - latleq);
-        
-        mean_lonlatleq = lambda_lon*double(R.z(idxlatleq, idxlongeq)) ...
-            + (1-lambda_lon) * double(R.z(idxlatleq, idxlonleq));
-        
-        mean_lonlatgeq = lambda_lon*double(R.z(idxlatgeq, idxlongeq)) ...
-            + (1-lambda_lon) * double(R.z(idxlatgeq, idxlonleq));
-        
-        elev = lambda_lat * mean_lonlatgeq + (1-lambda_lat)*mean_lonlatleq;
+        elev = interp2(R.lat, R.lon, double(R.z), lat, lon);
     end
 end
