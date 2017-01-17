@@ -3,6 +3,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % wird
     % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
     % übergib 'Animate' als letztes Argument, um den Plot der gefundenen Route zu animeren
+    % übergib 'Elevation' als letztes Argument, um Höhendatein einfließen zu lassen
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -16,14 +17,22 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     t_end = t + 1440;
     
     % initialisiere Arrays, werden dynamisch vergrößert:
-    % Folge der besuchten Koordinaten, betrachtete Zeitpunkte und zurückgelegte Distanz
+    % Folge der besuchten Koordinaten, betrachtete Zeitpunkte, zurückgelegte Distanz und
+    % Höhe zum entsprechenden Zeitpunkt
     X = coord;
     T = t;
-    D = 0;
+    D = zeros(1, 0); D(1,1) = 0;
+    E = zeros(1, 0); E(1,1) = 0;
     
     if mod(size(fitness.walkpause, 2), 2) ~= 0
         fprintf('Array specifiying walkling/pausing times has incorrect size');
         exit;
+    end
+    
+    if any(strcmpi(varargin, 'Elevation'))
+        consider_elevation = true;
+    else
+        consider_elevation = false;
     end
     
     endlastbreak = t;
@@ -74,6 +83,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             X(:, step) = X(:, step-1);
             T(1, step) = t;
             D(1, step) = D(1, step-1);
+            E(1, step) = E(1, step-1);
             continue;
         end
         
@@ -183,6 +193,14 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             
             % Geladenes Straßennetz plotten
             plot_streets(ax, parsed_osm);
+            
+            % Kümmern uns um Höhendaten, falls gewünscht
+            if  consider_elevation
+                R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
+                    'interp', 'outdir', 'hgt', ...
+                    'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
+                E(1, step) = get_elevation(lon, lat);
+            end
         end
         
         step = step + 1;
@@ -269,12 +287,20 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             coord_prev = coord;
             coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
+        
+            if consider_elevation
+                E(1, step) = get_elevation(lon, lat);
+                speed = (speed/6) * tobler( (E(step) - E(step-1))/distance_step );
+            else
+                E(1, step) = 0;
+            end
 
             t = t + distance_step/speed;
         else
             % Lasse zeit verstreichen, tue sonst nichts
             t = t + delta_t;
             distance_step = 0;
+            E(1, step) = E(1, step-1);
             % zum Debuggen!
             plot(ax, X(1, end), X(2, end), '.k', 'Linewidth', 4);
         end
@@ -335,5 +361,15 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     function pt = osmnode2vec(idx)
         pt = lonlat2vec(parsed_osm.node.xy(1, idx), ...
             parsed_osm.node.xy(2, idx), earth_radius);
+    end
+    
+    % Toblers Wanderfunktion in km/h
+    function v = tobler(slope)
+        v = 6 * exp( (-3.5) * abs(slope + 0.05));
+    end
+    
+    % interpoliere Höhe aus 4 umliegenden Punkten
+    function elev = get_elevation(lon, lat)
+        elev = interp2(R.lat, R.lon, double(R.z), lat, lon);
     end
 end
