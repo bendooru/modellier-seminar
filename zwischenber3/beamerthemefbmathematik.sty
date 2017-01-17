@@ -1,0 +1,145 @@
+\mode<presentation>
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{PTSans}
+\renewcommand{\familydefault}{\sfdefault}
+
+\newboolean{komms}
+\DeclareOptionBeamer{komms}{\ifthenelse{\boolean{#1}}{\setboolean{komms}{true}}{}}
+\ProcessOptionsBeamer
+
+
+% color
+
+\definecolor{light_gray}{gray}{0.80} % 0.90 war ok für direkten Ausdruck - 0.80 ist für Kopierer
+\definecolor{darkblue}{rgb}{.06,.19,.57}
+\definecolor{fkz1}{cmyk}{.72,.90,.35,0}
+\definecolor{fkz2}{cmyk}{.05,.11,0,0}
+\definecolor{kommsblau}{RGB}{130,208,245}
+\definecolor{kommsgruen}{RGB}{148,193,31}
+\definecolor{kommsgrau}{RGB}{185,185,185}
+\definecolor{kommshellgrau}{RGB}{218,218,218}
+\definecolor{kommsblaugrau}{RGB}{47,172,216}
+
+
+
+\definecolor{tuklblau}{RGB}{0,95,140}
+\definecolor{tuklblau8}{RGB}{35,132,173}
+\definecolor{tuklblau7}{RGB}{55,140,184}
+\definecolor{tuklblau6}{RGB}{78,159,194}
+\definecolor{tuklblau4}{RGB}{129,188,214}
+\definecolor{tuklblau2}{RGB}{188,221,235}
+\definecolor{tuklblau1}{RGB}{230,236,244}
+\definecolor{tuklrot}{RGB}{185,40,25}
+\definecolor{tuklrot8}{RGB}{206,47,47}
+\definecolor{tuklrot7}{RGB}{211,71,71}
+\definecolor{tuklrot6}{RGB}{218,96,96}
+\definecolor{tuklrot4}{RGB}{235,150,150}
+\definecolor{tuklrot2}{RGB}{242,200,200}
+\definecolor{tuklrot1}{RGB}{247,227,227}
+\definecolor{schwarz8}{RGB}{51,51,51}
+\definecolor{schwarz7}{RGB}{77,77,77}
+\definecolor{schwarz6}{RGB}{102,102,102}
+\definecolor{schwarz4}{RGB}{153,153,153}
+\definecolor{schwarz2}{RGB}{204,204,204}
+\definecolor{schwarz1}{RGB}{230,230,230}
+\definecolor{warmgrau}{RGB}{122,114,106}
+\definecolor{warmgrau8}{RGB}{149,141,133}
+\definecolor{warmgrau7}{RGB}{148,142,138}
+\definecolor{warmgrau6}{RGB}{168,158,153}
+\definecolor{warmgrau4}{RGB}{194,190,186}
+\definecolor{warmgrau2}{RGB}{224,222,220}
+\definecolor{warmgrau1}{RGB}{240,237,236}
+\definecolor{kaltgrau}{RGB}{102,128,128}
+\definecolor{kaltgrau8}{RGB}{129,153,153}
+\definecolor{kaltgrau7}{RGB}{143,166,166}
+\definecolor{kaltgrau6}{RGB}{157,179,179}
+\definecolor{kaltgrau4}{RGB}{188,204,204}
+\definecolor{kaltgrau2}{RGB}{220,230,230}
+\definecolor{kaltgrau1}{RGB}{237,242,242}
+\definecolor{tuklmathematik}{RGB}{254,192,0}
+
+
+
+\setbeamercolor{background canvas}{bg=tuklblau1}
+\setbeamercolor{title}{fg = tuklblau}
+\setbeamercolor{frametitle}{fg = tuklblau}
+\setbeamercolor{item}{fg = tuklblau7}
+\setbeamercolor{normal text}{fg=schwarz8}
+\setbeamercolor{block title}{fg = tuklblau}
+\setbeamercolor{block body}{fg = schwarz8}
+%\setbeamercolor{caption}{fg = Ftitle}
+%\setbeamercolor{caption name}{fg = Ftitle}
+\setbeamercolor{block title alerted}{fg = tuklrot}
+\setbeamercolor{block body alerted}{fg = black}
+\setbeamercolor{block title example}{fg = tuklblau, bg=warmgrau1}
+\setbeamercolor{block body example}{fg=warmgrau,bg=warmgrau1}
+
+% font
+
+%\setbeamerfont{title}{size = \huge}
+\setbeamerfont{frametitle}{size = \Large}
+
+
+
+% innertheme
+
+\useinnertheme{rounded}
+\setbeamertemplate{enumerate items}[default]
+
+
+% outertheme
+
+
+\setbeamertemplate{headline}{\vspace*{2mm}
+\begin{minipage}{0.4\textwidth}
+\ifthenelse{\boolean{komms}}{\includegraphics[width=3cm]{bilder/komms_logo.png}}{
+\begin{tikzpicture}
+\draw[draw=none,fill=tuklblau] (0,0) -- ++(2.7,0) arc (90:0:0.1) -- ++(0,-0.59) arc (0:-90:0.1) -- ++(-2.7,0);
+\draw (1.4, -0.28) node {\begin{scriptsize}{\color{white}\textbf{Fachbereich}}\end{scriptsize}};
+\draw (1.4, -0.52) node {\begin{scriptsize}{\color{white}\textbf{Mathematik}}\end{scriptsize}};
+\end{tikzpicture}}
+\end{minipage}
+\hfill
+\begin{minipage}{0.4\textwidth}
+\flushright
+\begin{tikzpicture}
+\draw[draw=none,fill=white] (0,0) -- ++(-2.7,0) arc (90:180:0.1) -- ++(0,-0.1) -- ++(2.8,0);
+\end{tikzpicture}
+
+
+\vspace{-0.35mm}
+
+\includegraphics[width=2.8cm]{bilder/tukl_logo_beamer.png}
+
+\vspace{-0.35mm}
+
+\begin{tikzpicture}
+\draw[draw=none,fill=white] (0,0) -- ++(-2.8,0) -- ++(0,-0.1) arc (180:270:0.1) -- ++(2.7,0);
+\end{tikzpicture}
+\end{minipage}
+
+}
+
+
+\setbeamertemplate{frametitle}{\vspace{3mm}\hspace*{-2mm}\insertframetitle}
+
+
+
+
+
+
+% Titelseite
+
+\newcommand{\Titel}[1]{
+\titlepage
+
+\ifthenelse{\equal{#1}{logo}}{
+\ifthenelse{\boolean{komms}}
+{\includegraphics[width=4cm]{bilder/komms_logo_text.png}\hfill\includegraphics[width=4.5cm]{bilder/tu_logo_blau.png}}
+{\begin{center}\includegraphics[width=4.5cm]{bilder/tu_logo_blau.png}\end{center}}
+}}
+
+
