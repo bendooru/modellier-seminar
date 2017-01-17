@@ -195,7 +195,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             plot_streets(ax, parsed_osm);
             
             % Kümmern uns um Höhendaten, falls gewünscht
-            if  consider_elevation
+            if consider_elevation
                 R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
                     'interp', 'outdir', 'hgt', ...
                     'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
@@ -370,6 +370,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     % interpoliere Höhe aus 4 umliegenden Punkten
     function elev = get_elevation(lon, lat)
-        elev = interp2(R.lat, R.lon, double(R.z), lat, lon);
+        elev = interp2(R.lat, R.lon, double(R.z'), lat, lon);
     end
 end

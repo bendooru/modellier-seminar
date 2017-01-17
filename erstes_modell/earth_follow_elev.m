@@ -100,6 +100,6 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     
     % interpoliere Höhe aus 4 umliegenden Punkten
     function elev = get_elevation(lon, lat)
-        elev = interp2(R.lat, R.lon, double(R.z), lat, lon);
+        elev = interp2(R.lat, R.lon, double(R.z'), lat, lon);
     end
 end
