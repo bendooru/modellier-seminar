@@ -40,7 +40,74 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{Höhendaten}
+    \frametitle{Höhendaten reloaded}
+    \begin{itemize}
+        \item Modell mit Einbezug von Höhendaten wies in letzter Version Fehler auf
+        \item[] $\rightarrow$ Fehler bei Einheitenumrechnung, Eingabe verfälscht
+        \item Weiteres Problem: eher geringe Datendichte (ca.90\,m zwischen
+            Koordinatenpunkten)
+        \item vorherige Lösung: nimm nächstgelegenen Höhenwert
+        \item jetzt: lineare Interpolation
+        \item wegen bessere Funktionalität: auch ins OSM-Modell eingebaut
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Beispiele}
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.95\textwidth]{bilder/nostreetnoele.jpg}
+        \caption{Ohne Berücksichtigung der Höhe}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Beispiele}
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.95\textwidth]{bilder/nostreetele.jpg}
+        \caption{Mit Berücksichtigung der Höhe}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Änderungen am Laufmodell}
+    Vorher
+    \begin{itemize}
+        \item An Kreuzung nimm gehe nur weiter wenn Straßen nicht von Sonne weg führen
+        \item[] $\rightarrow$ bleiben in bestimmten Straßen für lange Zeit stecken
+    \end{itemize}
+    Nun
+    \begin{itemize}
+        \item wähle nun an einer Kreuzung immer einen Weg, auch wenn er von der Sonne
+            wegführt
+        \item mache nun niemals kehrt, d.h. gehe niemals in Richtung des zuletzt besuchten
+            Knotens
+    \end{itemize}
+    Dies verhindert das Steckenbleiben in bestimmten Wegen, können aber dennoch in
+    Rundwegen lange im Kreis laufen
+\end{frame}
+
+\begin{frame}
+    \frametitle{Präsentation der Daten im OSM-Modell}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Beispiele}
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.95\textwidth]{bilder/noele.jpg}
+        \caption{Ohne Berücksichtigung der Höhe}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Beispiele}
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.95\textwidth]{bilder/ele.jpg}
+        \caption{Mit Berücksichtigung der Höhe}
+    \end{figure}
 \end{frame}
 
 \end{document}
