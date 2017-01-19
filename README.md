@@ -9,10 +9,10 @@ Repository zur Speicherung relevanter Dateien:
  * Funktion `follow_osm` berechnet Route ausgehend von Straßen- und Weg-Daten.
    Heruntergeladene .osm-Dateien werden im Unterverzeichnis `maps` gespeichert. Die Funktion
    hat folgende optionale Argumente:
-   * `'Animate'`: Animiert gefundene Route
-   * `'Elevation'`: Verwendet Höhendaten bei Berechnung der Geschwindigkeit
-   * `'LinePlot'`: Plotte umliegende Straßen aus osm-Dateien, anstatt Rastergrafiken zu unterlegen
-   * `'TimePlot'`: Plotte zusätzlich zurückgelegte Distanz nach Zeit
+    * `'Animate'`: Animiert gefundene Route
+    * `'Elevation'`: Verwendet Höhendaten bei Berechnung der Geschwindigkeit
+    * `'LinePlot'`: Plotte umliegende Straßen aus osm-Dateien, anstatt Rastergrafiken zu unterlegen
+    * `'TimePlot'`: Plotte zusätzlich zurückgelegte Distanz nach Zeit
  * `.hgt`-Dateien werden nun im Unterverzeichnis `hgt` gespeichert, um den Hauptorder
    nicht zuzumüllen. Das `readhgt`-Skript scheint Probleme beim Verbinden über http zu
    haben.
