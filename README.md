@@ -7,12 +7,14 @@ Repository zur Speicherung relevanter Dateien:
  * Infos zur Overpass-OSM-API: https://wiki.openstreetmap.org/wiki/Overpass_API
  * Details zur Berechnung von Kachelnamen: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
  * Funktion `follow_osm` berechnet Route ausgehend von Straßen- und Weg-Daten.
-   Heruntergeladene .osm-Dateien werden im Unterverzeichnis `maps` gespeichert. Die Funktion
-   hat folgende optionale Argumente:
+   Heruntergeladene .osm-Dateien werden im Unterverzeichnis `maps` gespeichert.
+ * In `osm-gui` wird `follow_osm` um grafische Ein- und Ausgabe erweitert (bisher nicht für Datum
+   und Fitness-Profil). Die Funktion hat folgende optionale Argumente:
     * `'Animate'`: Animiert gefundene Route
-    * `'Elevation'`: Verwendet Höhendaten bei Berechnung der Geschwindigkeit
-    * `'LinePlot'`: Plotte umliegende Straßen aus osm-Dateien, anstatt Rastergrafiken zu unterlegen
+    * `'NoElevation'`: Verwendet keine Höhendaten bei Berechnung der Geschwindigkeit
     * `'TimePlot'`: Plotte zusätzlich zurückgelegte Distanz nach Zeit
+    * Ein Aufruf der Form `osm_gui(_, 'Coord', [lon lat])` überspringt die grafische
+      Koordinatenwahl
  * `.hgt`-Dateien werden nun im Unterverzeichnis `hgt` gespeichert, um den Hauptorder
    nicht zuzumüllen. Das `readhgt`-Skript scheint Probleme beim Verbinden über http zu
    haben.
