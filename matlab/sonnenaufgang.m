@@ -1,4 +1,4 @@
-function [t_auf, visible] = sonnenaufgang(p, tag)
+function [t_auf, visible, t_unter] = sonnenaufgang(p, tag)
     tag_dauer = 1440;
     % Ausgangzeit sei 0 Uhr UTC an diesem Tag
     t_auf = tag*tag_dauer;
@@ -27,6 +27,13 @@ function [t_auf, visible] = sonnenaufgang(p, tag)
             % für späere Vorhaben: gib Sichtbarkeit aus
             visible = false;
             break;
+        end
+    end
+    
+    if visible
+        t_unter = t_auf;
+        while sun_visible(t_unter)
+            t_unter = t_unter+1;
         end
     end
     
