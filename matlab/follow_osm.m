@@ -1,11 +1,11 @@
-function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
+function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % optionale Argumente:
-    % * 'TimePlot':  Distanz/Zeit plotten
-    % * 'Animate':   Plot der gefundenen Route animeren
-    % * 'Elevation': mit Höhendaten rechnen
-    % * 'LinePlot':  plotte Straßen aus Kartendaten anstatt OSM-Kacheln im Hintergrund
+    % * 'TimePlot':    Distanz/Zeit plotten
+    % * 'Animate':     Plot der gefundenen Route animeren
+    % * 'NoElevation': ohne Höhendaten rechnen
+    % * 'LinePlot':    plotte Straßen aus Kartendaten anstatt OSM-Kacheln im Hintergrund
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -14,9 +14,10 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     % Werte initialisieren
     p = lonlat2vec(lon, lat, earth_radius);
-    [t, visible] = sonnenaufgang(p, tag);
+    [t, visible, t_unter] = sonnenaufgang(p, tag);
     % maximal einen Tag lang
     t_end = t + 1440;
+    day_dur = t_unter-t;
     
     % initialisiere Arrays, werden dynamisch vergrößert:
     % Folge der besuchten Koordinaten, betrachtete Zeitpunkte, zurückgelegte Distanz und
@@ -31,8 +32,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         return;
     end
     
-    consider_elevation = any(strcmpi(varargin, 'Elevation'));
-    lineplot = any(strcmpi(varargin, 'LinePlot'));
+    consider_elevation = ~any(strcmpi(varargin, 'NoElevation'));
     
     endlastbreak = t;
     fnpperiod = size(fitness.walkpause, 2)/2;
@@ -49,12 +49,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     step = 1;
     maps_used = 0;
-    
-    % figure in die die Karte geplottet wird
-    fig = figure;
-    ax = axes('Parent', fig);
-    daspect(ax, [1, 0.65, 1]);
-    hold(ax, 'on');
     
     % Format für Karten-Dateinamen
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
@@ -89,6 +83,11 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
         if boundaryDistance(coord, bounds) < 0.0007
+            % Statusupdate
+            ax.Title.String = sprintf('Calculating route ... (%d maps used, ~%.1f%%)', ...
+                maps_used, 100*(t-T(1))/day_dur);
+            drawnow;
+            
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
             local_map_found = false;
@@ -174,7 +173,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 fprintf('done.                     [%9.6f s]\n', time);
             catch
                 [~] = toc;
-                fprintf(' FAILED.\n');
+                fprintf('failed.\n');
                 break;
             end
 
@@ -190,11 +189,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             % diese Methode ist potentiell ungenau
             node_idx = findNearestVec(coord, parsed_osm.node.xy);
             node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
-            
-            % Geladenes Straßennetz plotten (bei übergebenem 'LinePlot'-Argument)
-            if lineplot
-                plot_streets(ax, parsed_osm);
-            end
             
             % Kümmern uns um Höhendaten, falls gewünscht
             if consider_elevation
@@ -223,9 +217,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             break;
         elseif num_neighbors == 1
             ist_sackgasse = true;
-            
-            % zum debuggen!
-            plot(ax, coord(1), coord(2), '.g');
         elseif num_neighbors == 2
             % Gehe Straße entlang, wenn keine Kreuzung.
             neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
@@ -297,8 +288,6 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             t = t + delta_t;
             distance_step = 0;
             E(1, step) = E(1, step-1);
-            % zum Debuggen!
-            plot(ax, X(1, end), X(2, end), '.k', 'Linewidth', 4);
         end
         
         X(:, step) = coord;
@@ -306,101 +295,7 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         D(1,step) = D(1,step-1) + distance_step;
     end
     
-    % Plotte gefundene Route
-    fprintf('\nFinished calculating route, plotting ... ');
-
-    xlabel(ax, 'Longitude (°)');
-    ylabel(ax, 'Latidude (°)');
-    datum = datestr(datetime('2000-12-31') + tag, 'mmmm dd');
-    title(ax, datum);
-    
-    % OSM-Tiles einfügen (wenn nicht Lineplot)
-    if ~lineplot
-        fprintf('\nPlotting background tiles:\n');
-        tiledir = 'tiles';
-        if ~isdir(tiledir)
-            mkdir(tiledir);
-        end
-        
-        % Zoom-Level (0-19)
-        z = 13;
-        % Anpassen
-        if maps_used < 10
-            z = 14;
-        elseif maps_used > 30
-            z = 12;
-        end
-        
-        [xmax, ymax] = coord2tile(max(X(1,:)), min(X(2,:)), z);
-        [xmin, ymin] = coord2tile(min(X(1,:)), max(X(2,:)), z);
-
-        cornerPlon = zeros(1, xmax-xmin + 2);
-        cornerPlat = zeros(1, ymax-ymin + 2);
-        for i=xmin:xmax+1
-            for j=ymin:ymax+1
-                [cornerPlon(1, i-xmin + 1), cornerPlat(1, j-ymin+1)] = ...
-                    tile2coordNW(i, j, z);
-            end
-        end
-        
-        for i=xmin:xmax
-            for j=ymin:ymax
-                tilename = fullfile(tiledir, sprintf('%.0d-%.0d-%.0d.png', z, i, j));
-                fprintf(' * Tile %s:', tilename);
-                if ~exist(tilename, 'file')
-                    websave(tilename, sprintf(...
-                        'http://a.tile.openstreetmap.org/%.0d/%.0d/%.0d.png', ...
-                        z, i, j));
-                    fprintf(' downloaded.\n');
-                else
-                    fprintf(' found.\n');
-                end
-
-                [TILE, tmap] = imread(tilename);
-                if ~isempty(tmap)
-                    TILE = ind2rgb(TILE, tmap);
-                end
-
-                image(cornerPlon((i:i+1)-xmin+1), cornerPlat((j:j+1)-ymin+1), ...
-                    TILE);
-            end
-        end
-        
-        % Schmiege Achsen an Hintergrundgrafiken an
-        ax.XLim = cornerPlon([1 end]);
-        ax.YLim = cornerPlat([end 1]);
-        
-        fprintf('Plotting route ... ');
-    end
-    
-    % rufe follow_osm mit dem Argument 'Animate' am Ende auf, um die entstehende Route
-    % animiert zu plotten
-    if any(strcmpi('Animate', varargin))
-        h = animatedline('Color', 'r', 'LineWidth', 1.5);
-        p = plot(ax, X(1, 1), X(2, 1),'o','MarkerFaceColor','red');
-        
-        for i = 1:size(X, 2)
-            addpoints(h, X(1, i), X(2, i));
-            p.XData = X(1, i);
-            p.YData = X(2, i);
-            ax.Title.String = sprintf('%s [%5.1f min]', datum, T(1, i) - T(1, 1));
-            drawnow;
-        end
-    else
-        % normaler, sofortiger Plot
-        plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 1.5);
-    end
-    
-    hold(ax, 'off');
-    fprintf('done.\n');
-    
-    % Plotte zurückgelegte Distanz über Zeit (nur wenn 'TimePlot' als Argument übergeben)
-    if any(strcmpi('TimePlot', varargin)) && size(T, 2) > 0
-        figure;
-        plot((T - T(1,1))./60, D./1000);
-        xlabel('Time [h]');
-        ylabel('Distance [km]');
-    end
+    fprintf('\nFinished calculating route.\n');
     
     % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der
     % Unendlich-Norm
@@ -426,17 +321,5 @@ function [X, ax, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % interpoliere Höhe aus 4 umliegenden Punkten
     function elev = get_elevation(lon, lat)
         elev = interp2(R.lat, R.lon, double(R.z'), lat, lon);
-    end
-    
-    % Berechnung der Tile-Daten (sie OSM-Wiki)
-    function [x, y] = coord2tile(LON, LAT, zoom)
-        x = floor((LON+180)/360 * 2^zoom);
-        y = floor((1-asinh(tan(deg2rad(LAT)))/pi)*2^(zoom-1));
-    end
-
-    function [LON, LAT] = tile2coordNW(X, Y, zoom)
-        N = 2^zoom;
-        LON = X/N * 360 - 180;
-        LAT = rad2deg(atan(sinh(pi - 2*pi*Y/N)));
     end
 end
