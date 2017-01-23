@@ -1,11 +1,8 @@
-function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
+function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % optionale Argumente:
-    % * 'TimePlot':    Distanz/Zeit plotten
-    % * 'Animate':     Plot der gefundenen Route animeren
     % * 'NoElevation': ohne Höhendaten rechnen
-    % * 'LinePlot':    plotte Straßen aus Kartendaten anstatt OSM-Kacheln im Hintergrund
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -20,10 +17,11 @@ function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, 
     day_dur = t_unter-t;
     
     % initialisiere Arrays, werden dynamisch vergrößert:
-    % Folge der besuchten Koordinaten, betrachtete Zeitpunkte, zurückgelegte Distanz und
-    % Höhe zum entsprechenden Zeitpunkt
+    % Folge der besuchten Koordinaten, betrachtete Zeitpunkte, universelle ID der
+    % besuchten Knoten, zurückgelegte Distanz, und Höhe zum entsprechenden Zeitpunkt
     X = coord;
     T = t;
+    N = zeros(1, 0); N(1,1) = 0;
     D = zeros(1, 0); D(1,1) = 0;
     E = zeros(1, 0); E(1,1) = 0;
     
@@ -75,6 +73,7 @@ function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, 
             
             step = step + 1;
             X(:, step) = X(:, step-1);
+            N(1, step) = N(1, step-1);
             T(1, step) = t;
             D(1, step) = D(1, step-1);
             E(1, step) = E(1, step-1);
@@ -190,6 +189,9 @@ function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, 
             node_idx = findNearestVec(coord, parsed_osm.node.xy);
             node_idx_prev = findNearestVec(coord_prev, parsed_osm.node.xy);
             
+            X(:, step) = parsed_osm.node.xy(:, node_idx);
+            N(1, step) = parsed_osm.node.id(node_idx);
+            
             % Kümmern uns um Höhendaten, falls gewünscht
             if consider_elevation
                 R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
@@ -230,6 +232,22 @@ function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, 
             
             neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
             num_neighbors = size(neighbor_idxs, 1);
+            
+            % Zykelprävention
+            lastvisited_idx = find(N(1, 1:end-1) == N(1, end), 1, 'last');
+            % prüfe, ob Knoten bereits einmal besucht
+            if isscalar(lastvisited_idx)
+                % prüfe, ob genug Distanz seit letztem Besuch zurückgelegt wurde
+                if lastvisited_idx > 1 && D(1, end) - D(1, lastvisited_idx) < 1000
+                    % prüfe, ob wir uns in gleicher Konfiguration befinden
+                    if N(end-1) == N(lastvisited_idx-1)
+                        % entferne damals ausgesuchten Nachbar als Option
+                        neighbor_idxs = neighbor_idxs(neighbor_idxs ~= ...
+                            find(parsed_osm.node.id==N(1, lastvisited_idx+1, 1)));
+                        num_neighbors = size(neighbor_idxs, 1);
+                    end
+                end
+            end
         end
             
         % benutze bereits geschriebene Funktion earth_path um die optimale nächste
@@ -291,6 +309,7 @@ function [X, D, T, maps_used] = follow_osm(lon, lat, delta_t, tag, fitness, ax, 
         end
         
         X(:, step) = coord;
+        N(1,step) = parsed_osm.node.id(node_idx);
         T(1,step) = t;
         D(1,step) = D(1,step-1) + distance_step;
     end
