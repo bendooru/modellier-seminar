@@ -72,7 +72,7 @@ function ax = osm_gui(d, m, fitness, varargin)
     hold(ax, 'on');
     
     tag = day(d, m);
-    [X, D, T, maps_used] = follow_osm(coord(1), coord(2), 1, tag, fitness, ax);
+    [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness, ax);
     
     datum = datestr(datetime('2000-12-31') + tag, 'mmmm dd');
     title(ax, datum);
@@ -130,7 +130,7 @@ function ax = osm_gui(d, m, fitness, varargin)
         x = floor((LON+180)./360 .* N);
         x = arrBounds(x, 0, N-1);
         
-        y = floor((1-asinh(tan(deg2rad(LAT)))./pi).*(N/2));
+        y = floor((1-asinh(tan(deg2rad(arrBounds(LAT, -maxLat, maxLat))))./pi).*(N/2));
         y = arrBounds(y, 0, N-1);
     end
 
@@ -162,8 +162,7 @@ function ax = osm_gui(d, m, fitness, varargin)
     end
 
     function tileBackground(xrange, yrange)
-        ax.XLim = xrange;
-        ax.YLim = yrange;
+        ax.XLim = xrange; ax.YLim = yrange;
         drawnow;
         
         % Errechne angemessenes Zoom-Level aus Plot-Größe
@@ -173,8 +172,15 @@ function ax = osm_gui(d, m, fitness, varargin)
             pixelheight = ax.Position(4);
         end
         
-        zlevel = log2((pixelheight * maxLat)/(range(yrange)*256)) + 1;
-        zlevel = arrBounds(round(zlevel), 0, 16);
+        zlevel_ur = log2((pixelheight * maxLat)/(range(yrange)*256)) + 1;
+        zlevel = arrBounds(floor(zlevel_ur), 0, 16);
+        
+        % Vergrößere Nachträglich Plotbereich, um Tile pixelgetreu darzustellen
+        meanx = mean(xrange);
+        xrange = meanx + 2^(zlevel_ur-zlevel).*(xrange-meanx);
+        meany = mean(yrange);
+        yrange = meany + 2^(zlevel_ur-zlevel).*(yrange-meany);
+        ax.XLim = xrange; ax.YLim = yrange;
         
         [xmax, ymax] = coord2tile(xrange(2), yrange(1), zlevel);
         [xmin, ymin] = coord2tile(xrange(1), yrange(2), zlevel);
