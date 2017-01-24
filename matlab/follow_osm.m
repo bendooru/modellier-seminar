@@ -1,4 +1,4 @@
-function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
+function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % optionale Argumente:
@@ -25,7 +25,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
     D = zeros(1, 0); D(1,1) = 0;
     E = zeros(1, 0); E(1,1) = 0;
     
-    if mod(size(fitness.walkpause, 2), 2) ~= 0
+    if size(fitness.walkpause, 1) ~= 2
         fprintf('Array specifiying walkling/pausing times has incorrect size');
         return;
     end
@@ -33,7 +33,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
     consider_elevation = ~any(strcmpi(varargin, 'NoElevation'));
     
     endlastbreak = t;
-    fnpperiod = size(fitness.walkpause, 2)/2;
+    fnpperiod = size(fitness.walkpause, 2);
     fnfperiod = size(fitness.f, 2);
     
     pauseidx = 1;
@@ -66,8 +66,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
         pidx = mod(pauseidx - 1, fnpperiod) + 1;
         
         % überprüfe, ob wir Pause machen wollen
-        if t - endlastbreak > fitness.walkpause(1, 2*pidx-1)
-            t = t + fitness.walkpause(1, 2*pidx);
+        if t - endlastbreak > fitness.walkpause(1, pidx)
+            t = t + fitness.walkpause(2, pidx);
             endlastbreak = t;
             pauseidx = pauseidx + 1;
             
@@ -83,9 +83,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, ax, varargin)
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
         if boundaryDistance(coord, bounds) < 0.0007
             % Statusupdate
-            ax.Title.String = sprintf('Calculating route ... (%d maps used, ~%.1f%%)', ...
-                maps_used, 100*(t-T(1))/day_dur);
-            drawnow;
+            waitbar((t-T(1))/day_dur, wbh, ...
+                sprintf('Calculating route ... (%d maps used)', maps_used));
             
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;

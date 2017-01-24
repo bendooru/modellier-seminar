@@ -7,8 +7,13 @@ function ax = osm_gui(d, m, fitness, varargin)
     ax = axes('Parent', fig);
     daspect(ax, [1, maxLat/180, 1]);
     
+    ax.XLim = [-180, 180];
+    ax.YLim = [-maxLat, maxLat];
+    
     xlabel(ax, 'Longitude (°)');
     ylabel(ax, 'Latidude (°)');
+    
+    drawnow;
 
     tiledir = 'tiles';
     if ~isdir(tiledir)
@@ -72,10 +77,15 @@ function ax = osm_gui(d, m, fitness, varargin)
     hold(ax, 'on');
     
     tag = day(d, m);
-    [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness, ax);
-    
     datum = datestr(datetime('2000-12-31') + tag, 'mmmm dd');
     title(ax, datum);
+    drawnow;
+    
+    wbh = waitbar(0, 'Calculating route ...');
+    
+    [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness, wbh);
+    
+    close(wbh);
     
     % OSM-Tiles einfügen
     fprintf('Plotting background tiles:\n');
