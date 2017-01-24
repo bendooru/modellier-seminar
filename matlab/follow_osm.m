@@ -57,6 +57,10 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
         mkdir(map_dir_name);
     end
     
+    if consider_elevation && ~isdir('hgt')
+        mkdir('hgt');
+    end
+    
     sackgassen_uuid = zeros(1,0);
     ist_sackgasse = false;
     
