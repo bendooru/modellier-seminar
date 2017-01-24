@@ -8,6 +8,7 @@ function ax = osm_gui(d, m, fitness, varargin)
             ax = varargin{find(axisString, 1)+1};
         catch
             fprintf('Malformed input for argument "Axis"\n');
+            return;
         end
     else
         fig = figure;
@@ -189,11 +190,10 @@ function ax = osm_gui(d, m, fitness, varargin)
         drawnow;
         
         % Errechne angemessenes Zoom-Level aus Plot-Größe
-        if strcmpi(ax.Units, 'normalized')
-            pixelheight = ax.Parent.Position(4) * ax.Position(4);
-        else
-            pixelheight = ax.Position(4);
-        end
+        oldunits = ax.Units;
+        ax.Units = 'pixels';
+        pixelheight = ax.Position(4);
+        ax.Units = oldunits;
         
         zlevel_ur = log2((pixelheight * maxLat)/range(yrange)) - 7;
         zlevel = arrBounds(floor(zlevel_ur), 0, 16);
