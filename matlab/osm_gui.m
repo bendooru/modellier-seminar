@@ -2,9 +2,19 @@ function ax = osm_gui(d, m, fitness, varargin)
     % Beispieltext
     
     % figure in die die Karte geplottet wird
-    fig = figure;
+    axisString = strcmpi('Axis', varargin);
+    if any(axisString)
+        try
+            ax = varargin{find(axisString, 1)+1};
+        catch
+            fprintf('Malformed input for argument "Axis"\n');
+        end
+    else
+        fig = figure;
+        ax = axes('Parent', fig);
+    end
+    
     maxLat = rad2deg(atan(sinh(pi)));
-    ax = axes('Parent', fig);
     daspect(ax, [1, maxLat/180, 1]);
     
     ax.XLim = [-180, 180];
@@ -21,57 +31,60 @@ function ax = osm_gui(d, m, fitness, varargin)
     end
     
     coordStr = strcmpi('Coord', varargin);
-    if any(coordStr)
-        try
-            % Lese Koordinaten aus nächstem Argument
-            coord = varargin{find(coordStr, 1)+1};
-        catch
-            fprintf('Malformed input\n');
-            return;
-        end
-    else
-        zoomstep = 1;
-        button = 0;
-        coord = [0,0];
-        
-        maxzoom = 15;
-        
-        widthhv = 180*[-1, 1];
-        heighthv = maxLat*[-1, 1];
-        
-        while zoomstep <= maxzoom && button ~= 3
-            ax.Title.String = 'Getting map ...';
-            drawnow; 
-            % Lösche Inhalt des Plots, um Verlangsumung zu verhindern
-            cla(ax);
-            
-            xRange = arrBounds(coord(1) + widthhv, -180, 180);
-            yRange = arrBounds(coord(2) + heighthv, -maxLat, maxLat);
-            
-            hold(ax, 'on');
-            tileBackground(xRange, yRange);
-            hold(ax, 'off');
-            
-            if zoomstep == maxzoom
-                ax.Title.String = 'Click to choose Starting Point';
-            else
-                ax.Title.String = ...
-                    'Left click to zoom in; right click to choose Starting Point';
+    setCoordManually = any(coordStr);
+    
+    zoomstep = 1;
+    button = 0;
+    coord = [0,0];
+
+    maxzoom = 15;
+
+    widthhv = 180*[-1, 1];
+    heighthv = maxLat*[-1, 1];
+
+    while zoomstep <= maxzoom && button ~= 3
+        ax.Title.String = 'Getting map ...';
+        drawnow; 
+        % Lösche Inhalt des Plots, um Verlangsumung zu verhindern
+        cla(ax);
+
+        xRange = arrBounds(coord(1) + widthhv, -180, 180);
+        yRange = arrBounds(coord(2) + heighthv, -maxLat, maxLat);
+
+        hold(ax, 'on');
+        tileBackground(xRange, yRange);
+        hold(ax, 'off');
+
+        if setCoordManually
+            try
+                % Lese Koordinaten aus nächstem Argument
+                coord = varargin{find(coordStr, 1)+1};
+            catch
+                fprintf('Malformed input\n');
+                return;
             end
-            drawnow;
-            
-            button = [];
-            
-            % sorgt dafür, dass nur Maus-Input zählt
-            while ~isscalar(button)
-                [coord(1), coord(2), button] = ginput(1);
-            end
-            zoomstep = zoomstep + 1;
-            
-            % halbiere Breite und Höhe des Zoom-Fensters
-            widthhv = widthhv./2;
-            heighthv = heighthv./2;
+            break;
         end
+
+        if zoomstep == maxzoom
+            ax.Title.String = 'Click to choose Starting Point';
+        else
+            ax.Title.String = ...
+                'Left click to zoom in; right click to choose Starting Point';
+        end
+        drawnow;
+
+        button = [];
+
+        % sorgt dafür, dass nur Maus-Input zählt
+        while ~isscalar(button)
+            [coord(1), coord(2), button] = ginput(1);
+        end
+        zoomstep = zoomstep + 1;
+
+        % halbiere Breite und Höhe des Zoom-Fensters
+        widthhv = widthhv./2;
+        heighthv = heighthv./2;
     end
     
     hold(ax, 'on');
@@ -182,7 +195,7 @@ function ax = osm_gui(d, m, fitness, varargin)
             pixelheight = ax.Position(4);
         end
         
-        zlevel_ur = log2((pixelheight * maxLat)/(range(yrange)*256)) + 1;
+        zlevel_ur = log2((pixelheight * maxLat)/range(yrange)) - 7;
         zlevel = arrBounds(floor(zlevel_ur), 0, 16);
         
         % Vergrößere Nachträglich Plotbereich, um Tile pixelgetreu darzustellen
