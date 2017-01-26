@@ -173,7 +173,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
                 fprintf('done.                     [%9.6f s]\n', time);
-            catch
+            catch Err
                 [~] = toc;
                 fprintf('failed.\n');
                 break;

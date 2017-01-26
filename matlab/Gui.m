@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 24-Jan-2017 14:14:22
+% Last Modified by GUIDE v2.5 25-Jan-2017 18:02:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -144,26 +144,6 @@ end
 
 
 
-function edit_pause_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_pause (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_pause as text
-%        str2double(get(hObject,'String')) returns contents of edit_pause as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_pause_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_pause (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in checkbox_Karte.
@@ -242,8 +222,15 @@ function pushbutton_los_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_los (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-coord = [str2num(get(handles.edit_lon,'String'));str2num(get(handles.edit_lat,'String'))];
-fitness.walkpause = [str2num(get(handles.edit_laufen,'String')); str2num(get(handles.edit_pause,'String'))];
+fitness.walkpause = sscanf(get(handles.edit_laufen,'String'), '%d,', [2 Inf]);
 fitness.f = { @(t) 90 };
 ax = handles.axes1;
-osm_gui(str2num(get(handles.edit_tag,'String')),str2num(get(handles.edit_monat,'String')), fitness, 'Animate', 'Coord', coord,'Axis',ax);
+tag = str2double(get(handles.edit_tag, 'String'));
+monat = str2double(get(handles.edit_monat, 'String'));
+if get(handles.checkbox2, 'Value') == 1
+    coord = [str2double(get(handles.edit_lon,'String')), ...
+             str2double(get(handles.edit_lat,'String'))];
+    osm_gui(tag, monat, fitness, 'Animate', 'Coord', coord, 'Axis',ax);
+else
+    osm_gui(tag, monat, fitness, 'Animate', 'Axis', ax);
+end
