@@ -1,4 +1,4 @@
-function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
+function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
     % optionale Argumente:
@@ -64,6 +64,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
     sackgassen_uuid = zeros(1,0);
     ist_sackgasse = false;
     
+    wbh = waitbar(0, 'Calculating route ...');
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
         % interpretiere die Laufzeit-Pause-Liste als zyklisch
@@ -88,7 +90,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
         if boundaryDistance(coord, bounds) < 0.0007
             % Statusupdate
             waitbar((t-T(1))/day_dur, wbh, ...
-                sprintf('Calculating route ... (%d maps used)', maps_used));
+                sprintf('Berechne Route ... (%d Karten verwendet)', maps_used));
             
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
@@ -140,8 +142,9 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
                 % Verbindungsfehler abfangen
                 try
                     remote_xml = webread(api_name, options);
-                catch
+                catch ME
                     fprintf('failed. Aborting calculation.\n');
+                    disp(getReport(ME, 'extended'));
                     [~] = toc;
                     break;
                 end
@@ -173,9 +176,10 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
                 fprintf('done.                     [%9.6f s]\n', time);
-            catch Err
+            catch ME
                 [~] = toc;
                 fprintf('failed.\n');
+                disp(getReport(ME, 'extended'));
                 break;
             end
 
@@ -316,6 +320,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, wbh, varargin)
         T(1,step) = t;
         D(1,step) = D(1,step-1) + distance_step;
     end
+    
+    close(wbh);
     
     fprintf('\nFinished calculating route.\n');
     

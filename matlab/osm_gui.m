@@ -90,11 +90,7 @@ function [X, D, T, ax] = osm_gui(d, m, fitness, varargin)
     title(ax, datum);
     drawnow;
     
-    wbh = waitbar(0, 'Calculating route ...');
-    
     [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness, wbh);
-    
-    close(wbh);
     
     % OSM-Tiles einfügen
     fprintf('Plotting background tiles:\n');

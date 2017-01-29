@@ -1,6 +1,6 @@
 function tileBackground(xrange, yrange, ax)
     ax.XLim = xrange; ax.YLim = yrange;
-    drawnow;
+    %drawnow;
     maxLat = rad2deg(atan(sinh(pi)));
 
     tiledir = 'tiles';
