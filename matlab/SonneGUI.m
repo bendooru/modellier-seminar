@@ -142,7 +142,8 @@ function SonneGUI
 
     function clearExampleFcn(obj, ~)
         handles = [guihandles.TagEdit, guihandles.MonatEdit, guihandles.LaufEdit, ...
-            guihandles.LaufPauseEdit, guihandles.LonEdit, guihandles.LatEdit];
+            guihandles.LaufPauseEdit, guihandles.KoordManuelleCheckB, ...
+            guihandles.LonEdit, guihandles.LatEdit];
         set(handles, 'Enable', 'on');
         
         set(obj, 'Enable', 'off');
@@ -163,7 +164,7 @@ function SonneGUI
         set(guihandles.LaufPauseEdit, {'String', 'Enable'}, ...
             { lplist(1:end-1), 'off' });
         
-        set(guihandles.KoordManuellCheckB, 'Value', 1);
+        set(guihandles.KoordManuellCheckB, {'Value', 'Enable'}, {1, 'off'});
         manuellCheckFcn(guihandles.KoordManuellCheckB);
         
         set(guihandles.LonEdit, {'String', 'Enable'}, ...
