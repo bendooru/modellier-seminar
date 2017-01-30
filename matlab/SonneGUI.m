@@ -124,10 +124,9 @@ function SonneGUI
        
         % Größen der Felder
         lonlatedits.Sizes = [35 -1 35 -1];
-        koordwahlfeld.Sizes = [-1 20];
+        koordwahlfeld.Sizes = [-1 -1];
         
         % Animiercheckbox
-        
         uicontrol('Parent', buttongroup, ...
             'Style', 'checkbox', ...
             'String', 'Animieren', ...
@@ -156,14 +155,14 @@ function SonneGUI
         mainlayout.Sizes = [-1 60];
     end
 
-    function clearExampleFcn(obj, ~)
-        ghandles = guihandles(obj);
+    function clearExampleFcn(hObj, ~)
+        ghandles = guihandles(hObj);
         handles = [ghandles.TagEdit, ghandles.MonatEdit, ghandles.LaufEdit, ...
             ghandles.LaufPauseEdit, ghandles.KoordManuellCheckB, ...
             ghandles.LonEdit, ghandles.LatEdit];
         set(handles, 'Enable', 'on');
         
-        set(obj, 'Enable', 'off');
+        set(hObj, 'Enable', 'off');
     end
 
     function setExampleFcn(hObj, fname)
@@ -214,11 +213,11 @@ function SonneGUI
     end
 
     % wird bei Druck des 'Los'-Knopfes ausgeführt
-    function startCalcFcn(obj, ~)
-        ghandles = guihandles(obj);
+    function startCalcFcn(hObj, ~)
+        ghandles = guihandles(hObj);
         
         % Knopf während Berechnung ausgrauen
-        set(obj, 'Enable', 'off');
+        set(hObj, 'Enable', 'off');
         set(ghandles.ReAnimateButton, 'Visible', 'off');
         
         % evtl. Fehlerbehandlung hinzufügen
@@ -235,12 +234,14 @@ function SonneGUI
         
         if get(ghandles.KoordManuellCheckB, 'Value') == 0
             coord = chooseStartingPoint(ghandles.MainAx);
+            set(ghandles.LonEdit, 'String', sprintf('%.6f', coord(1)));
+            set(ghandles.LatEdit, 'String', sprintf('%.6f', coord(2)));
         else
             coord(1) = str2double(get(ghandles.LonEdit, 'String'));
             coord(2) = str2double(get(ghandles.LatEdit, 'String'));
         end
         
-        data = guidata(obj);
+        data = guidata(hObj);
     
         tagj = day(tag, monat);
         datum = datestr(datetime('2000-12-31') + tagj, 'mmmm dd');
@@ -261,7 +262,7 @@ function SonneGUI
                 follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
         end
         
-        guidata(obj, data);
+        guidata(hObj, data);
         
         % beginne Plotten
         hold(ghandles.MainAx, 'on');
@@ -279,9 +280,9 @@ function SonneGUI
             h = plot(ghandles.MainAx, ...
                 data.XData(1, :), data.XData(2, :), '-r', 'LineWidth', 1.5);
             
-            data = guidata(obj);
+            data = guidata(hObj);
             data.RouteLine = h;
-            guidata(obj, data);
+            guidata(hObj, data);
         end
         
         set(ghandles.ReAnimateButton, 'Visible', 'on');
@@ -294,15 +295,15 @@ function SonneGUI
         dirExFun(hgtdir, ghandles.HgtMenu);
         
         % nach Berechnung Los-Knopf wieder freigeben
-        set(obj, 'Enable', 'on');
+        set(hObj, 'Enable', 'on');
     end
 
     % Animiere gefundene route erneut
-    function reAnimFcn(obj, ~)
-        ghandles = guihandles(obj);
-        data = guidata(obj);
+    function reAnimFcn(hObj, ~)
+        ghandles = guihandles(hObj);
+        data = guidata(hObj);
         
-        set(obj, 'Enable', 'off');
+        set(hObj, 'Enable', 'off');
         
         hold(ghandles.MainAx, 'on');
         delete(data.RouteLine);
@@ -311,12 +312,12 @@ function SonneGUI
             delete(data.PosMarker);
         end
         
-        guidata(obj, data);
+        guidata(hObj, data);
         
         animateRoute(data.XData, data.TData, ghandles.MainAx);
         hold(ghandles.MainAx, 'off');
         
-        set(obj, 'Enable', 'on');
+        set(hObj, 'Enable', 'on');
     end
 
     function animateRoute(X, T, ax)
@@ -409,14 +410,14 @@ function SonneGUI
     end
     
     % Funktion für TMP-Datei-Löschmenü
-    function dirExFun(dir, handle)
+    function dirExFun(dir, hObj)
         if isdir(dir)
-            set(handle, 'Enable', 'on');
+            set(hObj, 'Enable', 'on');
         end
     end
 
     % Ordner-Lösch-Funktion mit Bestätigungsdialog
-    function dirDelFun(obj, dir)
+    function dirDelFun(hObj, dir)
         if isdir(dir)
             p = pwd;
             button = questdlg(sprintf('Ordner "%s/%s" wirklich löschen?', p, dir), ...
@@ -427,6 +428,6 @@ function SonneGUI
         end
         
         % Aktualisiere Schaltflächen-Status
-        dirExFun(dir, obj);
+        dirExFun(dir, hObj);
     end
 end
