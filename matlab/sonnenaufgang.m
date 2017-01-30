@@ -32,7 +32,7 @@ function [t_auf, visible, t_unter] = sonnenaufgang(p, tag)
     
     if visible
         t_unter = t_auf;
-        while sun_visible(t_unter) && T_unter < t_auf + 1400
+        while sun_visible(t_unter) && t_unter < t_auf + 1400
             t_unter = t_unter+1;
         end
     else

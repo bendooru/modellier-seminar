@@ -28,6 +28,10 @@ function tileBackground(xrange, yrange, ax)
     [xmin, ymin] = coord2tile(xrange(1), yrange(2), zlevel);
 
     [cornerLon, cornerLat] = tile2coordNW(xmin:xmax+1, ymin:ymax+1, zlevel);
+    
+    wb = waitbar(0, 'Aktualisiere Karte ...');
+    karten = 0;
+    karten_max = numel(xmin:xmax) * numel(ymin:ymax);
 
     for xx=xmin:xmax
         for yy=ymin:ymax
@@ -35,11 +39,16 @@ function tileBackground(xrange, yrange, ax)
 
             image('XData', cornerLon((xx:xx+1)-xmin+1), ...
                 'YData', cornerLat((yy:yy+1)-ymin+1), ...
-                'CData', TILE);
+                'CData', TILE, 'Parent', ax);
+            
+            karten = karten + 1;
+            waitbar(karten/karten_max, wb);
         end
     end
+    
+    close(wb);
 
-% Berechnung der Tile-Daten (sie OSM-Wiki)
+    % Berechnung der Tile-Daten (sie OSM-Wiki)
     function [x, y] = coord2tile(LON, LAT, Zoom)
         N = 2^Zoom;
         

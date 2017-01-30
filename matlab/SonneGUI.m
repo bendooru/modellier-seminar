@@ -59,10 +59,10 @@ function SonneGUI
         mainlayout = uiextras.VBox('Parent', f);
         handles.MainAx = axes('Parent', mainlayout, ...
             'DataAspectRatio', [1 maxLat/180 1], ...
-            'Title', 'Kartenbereich', ...
             'XLim', [-180 180], ...
             'YLim', [-maxLat maxLat]);
         
+        title(handles.MainAx, 'Kartenbereich');
         xlabel(handles.MainAx, 'Longitude (°)');
         ylabel(handles.MainAx, 'Latitude (°)');
         
@@ -127,7 +127,7 @@ function SonneGUI
         lastbuttons = uiextras.VBox('Parent', buttongroup);
         
         handles.ReAnimateButton = uicontrol('Parent', lastbuttons, ...
-            'String', 'Erneut animieren', ...
+            'String', 'Route animieren', ...
             'Visible', 'off', ...
             'Callback', @reAnimFcn);
         
@@ -142,7 +142,7 @@ function SonneGUI
 
     function clearExampleFcn(obj, ~)
         handles = [guihandles.TagEdit, guihandles.MonatEdit, guihandles.LaufEdit, ...
-            guihandles.LaufPauseEdit, guihandles.KoordManuelleCheckB, ...
+            guihandles.LaufPauseEdit, guihandles.KoordManuellCheckB, ...
             guihandles.LonEdit, guihandles.LatEdit];
         set(handles, 'Enable', 'on');
         
@@ -203,7 +203,7 @@ function SonneGUI
         % bisher nur konstante Funktion
         fitness.f = { @(t) speed };
         
-        % TODO
+        % Entnimm Checkbox, ob Plot animiert werden soll
         animateplot = get(guihandles.AnimateCB, 'Value');
         
         if get(guihandles.KoordManuellCheckB, 'Value') == 0
