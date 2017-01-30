@@ -8,11 +8,11 @@ function SonneGUI
     mapdir  = 'maps';
     hgtdir  = 'hgt';
     
-    guihandles = createGUI;
+    createGUI;
     
     
     %% Hilfsfunktionen
-    function handles = createGUI()
+    function createGUI()
         % Erstellt alle GUI-Elemente, gibt Handle zurück, der diese enthält
         f = figure('Name', 'Immer der Sonn'' entgegen', ...
             'MenuBar', 'none', ...
@@ -21,34 +21,41 @@ function SonneGUI
         
         % Menüliste
         mmenu = uimenu(f, 'Label', 'Temporäre Dateien');
-        handles.tilemenu = uimenu(mmenu, 'Label', '.png-Tiledaten löschen', ...
+        tilemenu = uimenu(mmenu, 'Label', '.png-Tiledaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(~, ~) dirDelFun(tiledir));
-        handles.osmmenu = uimenu(mmenu, 'Label', '.osm-Kartendaten löschen', ...
+            'Callback', @(~, ~) dirDelFun(tiledir), ...
+            'Tag', 'TileMenu');
+        osmmenu = uimenu(mmenu, 'Label', '.osm-Kartendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(~, ~) dirDelFun(mapdir));
-        handles.hgtmenu = uimenu(mmenu, 'Label', '.hgt-Höhendaten löschen', ...
+            'Callback', @(~, ~) dirDelFun(mapdir), ...
+            'Tag', 'OsmMenu');
+        hgtmenu = uimenu(mmenu, 'Label', '.hgt-Höhendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(obj, ~) dirDelFun(obj, hgtdir));
+            'Callback', @(obj, ~) dirDelFun(obj, hgtdir), ...
+            'Tag', 'HgtMenu');
         
         % Aktiviere Schaltflächen, falls Ordner existieren
-        dirExFun(tiledir, handles.tilemenu);
-        dirExFun(mapdir, handles.osmmenu);
-        dirExFun(hgtdir, handles.hgtmenu);
+        dirExFun(tiledir, tilemenu);
+        dirExFun(mapdir, osmmenu);
+        dirExFun(hgtdir, hgtmenu);
         
         bmenu = uimenu(f, 'Label', 'Beispiele');
         loadmenu = uimenu(bmenu, 'Label', 'Beispiel laden ...');
-        handles.ClearExMenu = uimenu(bmenu, 'Label', 'Beispiel zurücksetzen', ...
-            'Enable', 'off', ...
-            'Callback', @clearExampleFcn);
         
+        % finde .mat-Dateien im beispiel-Ordner und fürge entsprechende Menü-Eintrgäge
+        % hinzu
         exmfiles = dir(fullfile('beispiele', '*.mat'));
         for i = 1:size(exmfiles, 1)
             filename = fullfile('beispiele', exmfiles(i).name);
             load(filename, 'str');
             uimenu(loadmenu, 'Label', str, ...
-            'Callback', @(~, ~) setExampleFcn(filename));
+                'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
         end
+        
+        uimenu(bmenu, 'Label', 'Beispiel zurücksetzen', ...
+            'Enable', 'off', ...
+            'Callback', @clearExampleFcn, ...
+            'Tag', 'ClearExMenu');
         
         % Menüeintrag zum Beenden des Programms (auch mit Strg-W)
         uimenu(mmenu, 'Label', 'Beenden', 'Accelerator', 'W', ...
@@ -57,14 +64,15 @@ function SonneGUI
         
         % Hauptbereich
         mainlayout = uiextras.VBox('Parent', f);
-        handles.MainAx = axes('Parent', mainlayout, ...
+        ax = axes('Parent', mainlayout, ...
             'DataAspectRatio', [1 maxLat/180 1], ...
             'XLim', [-180 180], ...
-            'YLim', [-maxLat maxLat]);
+            'YLim', [-maxLat maxLat], ...
+            'Tag', 'MainAx');
         
-        title(handles.MainAx, 'Kartenbereich');
-        xlabel(handles.MainAx, 'Longitude (°)');
-        ylabel(handles.MainAx, 'Latitude (°)');
+        title(ax, 'Kartenbereich');
+        xlabel(ax, 'Longitude (°)');
+        ylabel(ax, 'Latitude (°)');
         
         % unterer Teil der GUI
         controlpanel = uiextras.Panel('Parent', mainlayout, ...
@@ -76,38 +84,43 @@ function SonneGUI
         % Tag-Monat-Eingabefeld
         tagmonatfeld = uiextras.HBox('Parent', ...
             uiextras.BoxPanel('Parent', buttongroup, 'Title', 'Tag, Monat'));
-        handles.TagEdit   = uicontrol('Parent', tagmonatfeld, ...
-            'Style', 'edit', 'String', '1');
-        handles.MonatEdit = uicontrol('Parent', tagmonatfeld, ...
-            'Style', 'edit', 'String', '1');
+        uicontrol('Parent', tagmonatfeld, 'Style', 'edit', 'String', '1', ...
+            'Tag', 'TagEdit');
+        uicontrol('Parent', tagmonatfeld, 'Style', 'edit', 'String', '1', ...
+            'Tag', 'MonatEdit');
         
         % Eingabefeld für Laufgeschwindigkeit
         laufgeschwfeld = uiextras.BoxPanel('Parent', buttongroup, ...
             'Title', 'Geschw. [m/min]');
-        handles.LaufEdit = uicontrol('Parent', laufgeschwfeld, ...
-            'Style', 'edit', 'String', '90');
+        uicontrol('Parent', laufgeschwfeld, ...
+            'Style', 'edit', 'String', '90', ...
+            'Tag', 'LaufEdit');
         
         % Eingabefeld für Lauf- und Pausezeiten
         laufpausefeld = uiextras.BoxPanel('Parent', buttongroup, ...
             'Title', 'Lauf-Pause-Intervalle (Komma-getrennt)');
-        handles.LaufPauseEdit = uicontrol('Parent', laufpausefeld, ...
-            'Style', 'edit', 'String', '180, 30');
+        uicontrol('Parent', laufpausefeld, ...
+            'Style', 'edit', 'String', '180, 30', ...
+            'Tag', 'LaufPauseEdit');
         
         % Manuelle Koordinatenwahl
         koordwahlfeld = uiextras.VBox('Parent', buttongroup);
-        handles.KoordManuellCheckB = uicontrol('Parent', koordwahlfeld, ...
+        uicontrol('Parent', koordwahlfeld, ...
             'Style', 'checkbox', ...
             'String', 'Koordinaten manuell eingeben', ...
             'Value', 0, ...
-            'Callback', @manuellCheckFcn);
-        lonlatedits = uiextras.HBox('Parent', koordwahlfeld, 'Visible', 'off');
+            'Callback', @manuellCheckFcn, ...
+            'Tag', 'KoordManuellCheckB');
+        lonlatedits = uiextras.HBox('Parent', koordwahlfeld, 'Visible', 'off', ...
+            'Tag', 'LonLatEdits');
         uicontrol('Parent', lonlatedits, 'Style', 'text', 'String', 'Lon.:');
-        handles.LonEdit = uicontrol('Parent', lonlatedits, ...
-            'Style', 'edit', 'String', '0');
+        uicontrol('Parent', lonlatedits, ...
+            'Style', 'edit', 'String', '0', ...
+            'Tag', 'LonEdit');
         uicontrol('Parent', lonlatedits, 'Style', 'text', 'String', 'Lat.:');
-        handles.LatEdit = uicontrol('Parent', lonlatedits, ...
-            'Style', 'edit', 'String', '0');
-        handles.LonLatEdits = lonlatedits;
+        uicontrol('Parent', lonlatedits, ...
+            'Style', 'edit', 'String', '0', ...
+            'Tag', 'LatEdit');
        
         % Größen der Felder
         lonlatedits.Sizes = [35 -1 35 -1];
@@ -115,10 +128,11 @@ function SonneGUI
         
         % Animiercheckbox
         
-        handles.AnimateCB = uicontrol('Parent', buttongroup, ...
+        uicontrol('Parent', buttongroup, ...
             'Style', 'checkbox', ...
             'String', 'Animieren', ...
-            'Value', 0);
+            'Value', 0, ...
+            'Tag', 'AnimateCB');
         
         % Zwischenraum
         uiextras.Empty('Parent', buttongroup);
@@ -126,14 +140,16 @@ function SonneGUI
         % Animier- und Losknopf am rechten Rand des Programms
         lastbuttons = uiextras.VBox('Parent', buttongroup);
         
-        handles.ReAnimateButton = uicontrol('Parent', lastbuttons, ...
+        uicontrol('Parent', lastbuttons, ...
             'String', 'Route animieren', ...
             'Visible', 'off', ...
-            'Callback', @reAnimFcn);
+            'Callback', @reAnimFcn, ...
+            'Tag', 'ReAnimateButton');
         
-        handles.LosButton = uicontrol('Parent', lastbuttons, ...
+        uicontrol('Parent', lastbuttons, ...
             'String', 'Los', ...
-            'Callback', @startCalcFcn);
+            'Callback', @startCalcFcn, ...
+            'Tag', 'LosButton');
         
         buttongroup.Sizes = [90 120 270 250 100 -1 120];
         
@@ -141,122 +157,141 @@ function SonneGUI
     end
 
     function clearExampleFcn(obj, ~)
-        handles = [guihandles.TagEdit, guihandles.MonatEdit, guihandles.LaufEdit, ...
-            guihandles.LaufPauseEdit, guihandles.KoordManuellCheckB, ...
-            guihandles.LonEdit, guihandles.LatEdit];
+        ghandles = guihandles(obj);
+        handles = [ghandles.TagEdit, ghandles.MonatEdit, ghandles.LaufEdit, ...
+            ghandles.LaufPauseEdit, ghandles.KoordManuellCheckB, ...
+            ghandles.LonEdit, ghandles.LatEdit];
         set(handles, 'Enable', 'on');
         
         set(obj, 'Enable', 'off');
     end
 
-    function setExampleFcn(fname)
+    function setExampleFcn(hObj, fname)
+        ghandles = guihandles(hObj);
+        
         % lädt Variablen str, coord, tag, monat, fitness, X, T
         loadedvar = load(fname);
         
-        set(guihandles.TagEdit, {'String', 'Enable'}, ...
+        set(ghandles.TagEdit, {'String', 'Enable'}, ...
             { sprintf('%d', loadedvar.tag), 'off' });
-        set(guihandles.MonatEdit, {'String', 'Enable'}, ...
+        set(ghandles.MonatEdit, {'String', 'Enable'}, ...
             { sprintf('%d', loadedvar.monat), 'off' });
         
-        set(guihandles.LaufEdit, {'String', 'Enable'}, ...
+        set(ghandles.LaufEdit, {'String', 'Enable'}, ...
             { sprintf('%d', loadedvar.fitness.f{1}(0)), 'off' });
         lplist = sprintf('%d,', loadedvar.fitness.walkpause);
-        set(guihandles.LaufPauseEdit, {'String', 'Enable'}, ...
+        set(ghandles.LaufPauseEdit, {'String', 'Enable'}, ...
             { lplist(1:end-1), 'off' });
         
-        set(guihandles.KoordManuellCheckB, {'Value', 'Enable'}, {1, 'off'});
-        manuellCheckFcn(guihandles.KoordManuellCheckB);
+        set(ghandles.KoordManuellCheckB, {'Value', 'Enable'}, {1, 'off'});
+        manuellCheckFcn(ghandles.KoordManuellCheckB);
         
-        set(guihandles.LonEdit, {'String', 'Enable'}, ...
+        set(ghandles.LonEdit, {'String', 'Enable'}, ...
             { sprintf('%f', loadedvar.coord(1)), 'off' });
-        set(guihandles.LatEdit, {'String', 'Enable'}, ...
+        set(ghandles.LatEdit, {'String', 'Enable'}, ...
             { sprintf('%f', loadedvar.coord(2)), 'off' });
         
-        guihandles.XData = loadedvar.X;
-        guihandles.TData = loadedvar.T;
+        data = guidata(hObj);
         
-        set(guihandles.ClearExMenu, 'Enable', 'on');
+        data.XData = loadedvar.X;
+        data.TData = loadedvar.T;
+        
+        guidata(hObj, data);
+        
+        set(ghandles.ClearExMenu, 'Enable', 'on');
     end
 
     function manuellCheckFcn(hObj, ~)
+        ghandles = guihandles(hObj);
+        
         if get(hObj, 'Value') == 1
             visval = 'on';
         else
             visval = 'off';
         end
         
-        set(guihandles.LonLatEdits, 'Visible', visval);
+        set(ghandles.LonLatEdits, 'Visible', visval);
     end
 
     % wird bei Druck des 'Los'-Knopfes ausgeführt
     function startCalcFcn(obj, ~)
+        ghandles = guihandles(obj);
+        
         % Knopf während Berechnung ausgrauen
         set(obj, 'Enable', 'off');
-        set(guihandles.ReAnimateButton, 'Visible', 'off');
+        set(ghandles.ReAnimateButton, 'Visible', 'off');
         
         % evtl. Fehlerbehandlung hinzufügen
-        tag   = str2double(get(guihandles.TagEdit,   'String'));
-        monat = str2double(get(guihandles.MonatEdit, 'String'));
-        speed = str2double(get(guihandles.LaufEdit, 'String'));
+        tag   = str2double(get(ghandles.TagEdit,   'String'));
+        monat = str2double(get(ghandles.MonatEdit, 'String'));
+        speed = str2double(get(ghandles.LaufEdit, 'String'));
         
-        fitness.walkpause = sscanf(get(guihandles.LaufPauseEdit,'String'), '%d,', [2 Inf]);
+        fitness.walkpause = sscanf(get(ghandles.LaufPauseEdit,'String'), '%d,', [2 Inf]);
         % bisher nur konstante Funktion
         fitness.f = { @(t) speed };
         
         % Entnimm Checkbox, ob Plot animiert werden soll
-        animateplot = get(guihandles.AnimateCB, 'Value');
+        animateplot = get(ghandles.AnimateCB, 'Value');
         
-        if get(guihandles.KoordManuellCheckB, 'Value') == 0
-            coord = chooseStartingPoint(guihandles.MainAx);
+        if get(ghandles.KoordManuellCheckB, 'Value') == 0
+            coord = chooseStartingPoint(ghandles.MainAx);
         else
-            coord(1) = str2double(get(guihandles.LonEdit, 'String'));
-            coord(2) = str2double(get(guihandles.LatEdit, 'String'));
+            coord(1) = str2double(get(ghandles.LonEdit, 'String'));
+            coord(2) = str2double(get(ghandles.LatEdit, 'String'));
         end
+        
+        data = guidata(obj);
     
         tagj = day(tag, monat);
         datum = datestr(datetime('2000-12-31') + tagj, 'mmmm dd');
-        guihandles.Datum = datum;
-        title(guihandles.MainAx, datum);
+        data.Datum = datum;
+        title(ghandles.MainAx, datum);
         drawnow;
         
         % falls kein Beispiel geladen
-        if strcmp(get(guihandles.TagEdit, 'Enable'), 'on')
+        if strcmp(get(ghandles.TagEdit, 'Enable'), 'on')
             % Orte zu südlich oder nördlich beitzen keine Höhendaten
             if abs(coord(2)) > 60
                 opt = 'NoElevation';
             else
                 opt = 'Elevation';
             end
-            [guihandles.XData, ~, guihandles.TData] = ...
+            
+            [data.XData, ~, data.TData] = ...
                 follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
         end
         
+        guidata(obj, data);
+        
         % beginne Plotten
-        hold(guihandles.MainAx, 'on');
+        hold(ghandles.MainAx, 'on');
     
-        cla(guihandles.MainAx);
+        cla(ghandles.MainAx);
         % Extrema
-        xyRange = minmax(guihandles.XData) + [-0.001, 0.001; -0.001, 0.001];
+        xyRange = minmax(data.XData) + [-0.001, 0.001; -0.001, 0.001];
 
-        tileBackground(xyRange(1, :), xyRange(2, :), guihandles.MainAx);
+        tileBackground(xyRange(1, :), xyRange(2, :), ghandles.MainAx);
 
         if animateplot
-            animateRoute(guihandles.XData, guihandles.TData, guihandles.MainAx);
+            animateRoute(data.XData, data.TData, ghandles.MainAx);
         else
             % normaler, sofortiger Plot
-            h = plot(guihandles.MainAx, ...
-                guihandles.XData(1, :), guihandles.XData(2, :), '-r', 'LineWidth', 1.5);
-            guihandles.RouteLine = h;
+            h = plot(ghandles.MainAx, ...
+                data.XData(1, :), data.XData(2, :), '-r', 'LineWidth', 1.5);
+            
+            data = guidata(obj);
+            data.RouteLine = h;
+            guidata(obj, data);
         end
         
-        set(guihandles.ReAnimateButton, 'Visible', 'on');
+        set(ghandles.ReAnimateButton, 'Visible', 'on');
 
-        hold(guihandles.MainAx, 'off');
+        hold(ghandles.MainAx, 'off');
         
         % Aktiviere Schaltflächen, falls Ordner existieren
-        dirExFun(tiledir, guihandles.tilemenu);
-        dirExFun(mapdir, guihandles.osmmenu);
-        dirExFun(hgtdir, guihandles.hgtmenu);
+        dirExFun(tiledir, ghandles.TileMenu);
+        dirExFun(mapdir, ghandles.OsmMenu);
+        dirExFun(hgtdir, ghandles.HgtMenu);
         
         % nach Berechnung Los-Knopf wieder freigeben
         set(obj, 'Enable', 'on');
@@ -264,22 +299,29 @@ function SonneGUI
 
     % Animiere gefundene route erneut
     function reAnimFcn(obj, ~)
+        ghandles = guihandles(obj);
+        data = guidata(obj);
+        
         set(obj, 'Enable', 'off');
         
-        hold(guihandles.MainAx, 'on');
-        delete(guihandles.RouteLine);
+        hold(ghandles.MainAx, 'on');
+        delete(data.RouteLine);
         
-        if isfield(guihandles, 'PosMarker')
-            delete(guihandles.PosMarker);
+        if isfield(data, 'PosMarker')
+            delete(data.PosMarker);
         end
         
-        animateRoute(guihandles.XData, guihandles.TData, guihandles.MainAx);
-        hold(guihandles.MainAx, 'off');
+        guidata(obj, data);
+        
+        animateRoute(data.XData, data.TData, ghandles.MainAx);
+        hold(ghandles.MainAx, 'off');
         
         set(obj, 'Enable', 'on');
     end
 
     function animateRoute(X, T, ax)
+        data = guidata(ax);
+        
         h = animatedline('Color', 'r', 'LineWidth', 1.5);
         p = plot(ax, X(1, 1), X(2, 1), 'o', 'MarkerFaceColor', 'red');
         
@@ -293,7 +335,7 @@ function SonneGUI
             else
                 timestr = sprintf('%.1f min', runtime);
             end
-            title(ax, sprintf('%s [%s]', guihandles.Datum, timestr));
+            title(ax, sprintf('%s [%s]', data.Datum, timestr));
             % limitrate erhöht Performance, es wir aber sehr schnell geplottet
             drawnow limitrate;
             
@@ -302,8 +344,10 @@ function SonneGUI
         end
         
         % Mache Handels 'global'
-        guihandles.PosMarker = p;
-        guihandles.RouteLine = h;
+        data.PosMarker = p;
+        data.RouteLine = h;
+        
+        guidata(ax, data);
     end
 
     % beschränke Elemente in Array
