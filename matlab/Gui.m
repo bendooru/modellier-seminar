@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 25-Jan-2017 18:02:29
+% Last Modified by GUIDE v2.5 30-Jan-2017 15:09:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,20 +155,8 @@ function checkbox_Karte_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of checkbox_Karte
 
 
-% --- Executes on button press in checkbox2.
-function checkbox2_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox2
-if(get(hObject, 'Value')==0)
-    handles.edit_lon.Visible='off';
-    handles.edit_lat.Visible='off';
-else
-    handles.edit_lon.Visible='on';
-    handles.edit_lat.Visible='on';
-end
+
     
 
 
@@ -222,15 +210,224 @@ function pushbutton_los_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_los (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fitness.walkpause = sscanf(get(handles.edit_laufen,'String'), '%d,', [2 Inf]);
-fitness.f = { @(t) 90 };
+% pushbutton_los_Callback.Enable='off';
+if get(handles.checkbox_profil_manuell, 'Value') == 1
+    fitness.walkpause = sscanf(get(handles.edit_laufen,'String'), '%d,', [2 Inf]);
+    fitness.f = { @(t) str2double(get(handles.edit_geschwindigkeit, 'String')) };
+end
+if get(handles.checkbox_profil1, 'Value') == 1
+    fitness.walkpause = [180;30];
+    fitness.f = { @(t) 90 };
+end
+if get(handles.checkbox_profil2, 'Value') == 1
+    fitness.walkpause = [180;30];
+    fitness.f = { @(t) 90 };
+end
+if get(handles.checkbox_profil3, 'Value') == 1
+    fitness.walkpause = [180;30];
+    fitness.f = { @(t) 90 };
+end
 ax = handles.axes1;
 tag = str2double(get(handles.edit_tag, 'String'));
 monat = str2double(get(handles.edit_monat, 'String'));
-if get(handles.checkbox2, 'Value') == 1
+if get(handles.checkbox_koordinaten, 'Value') == 1
     coord = [str2double(get(handles.edit_lon,'String')), ...
              str2double(get(handles.edit_lat,'String'))];
     osm_gui(tag, monat, fitness, 'Animate', 'Coord', coord, 'Axis',ax);
 else
     osm_gui(tag, monat, fitness, 'Animate', 'Axis', ax);
+end
+% pushbutton_los_Callback.Enable='on';
+
+% --------------------------------------------------------------------
+function menue_Callback(hObject, eventdata, handles)
+% hObject    handle to menue (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function Karten_loeschen_Callback(hObject, eventdata, handles)
+% hObject    handle to Karten_loeschen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isdir('maps')
+    rmdir('maps','s');
+end
+if isdir('tiles')
+    rmdir('tiles','s');
+end
+
+
+
+function edit_geschwindigkeit_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_geschwindigkeit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_geschwindigkeit as text
+%        str2double(get(hObject,'String')) returns contents of edit_geschwindigkeit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_geschwindigkeit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_geschwindigkeit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in checkbox_profil_manuell.
+function checkbox_profil_manuell_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_profil_manuell (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_profil_manuell
+if(get(hObject, 'Value')==0)
+    if handles.checkbox_profil1.Value || handles.checkbox_profil2.Value || handles.checkbox_profil3.Value 
+        handles.edit_geschwindigkeit.Visible='off';
+        handles.text_geschwindigkeit.Visible='off';
+        handles.edit_laufen.Visible='off';
+        handles.text_laufen.Visible='off';
+    else
+        handles.checkbox_profil_manuell.Value=1;
+    end
+else
+    handles.edit_geschwindigkeit.Visible='on';
+    handles.text_geschwindigkeit.Visible='on';
+    handles.edit_laufen.Visible='on';
+    handles.text_laufen.Visible='on';
+    handles.checkbox_profil1.Value=0;
+    handles.checkbox_profil2.Value=0;
+    handles.checkbox_profil3.Value=0;
+end
+
+
+% --- Executes on button press in checkbox_profil1.
+function checkbox_profil1_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_profil1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_profil1
+if(get(hObject, 'Value')==1)
+    handles.checkbox_profil2.Value=0;
+    handles.checkbox_profil3.Value=0;
+    handles.checkbox_profil_manuell.Value=0;
+    handles.edit_geschwindigkeit.Visible='off';
+    handles.text_geschwindigkeit.Visible='off';
+    handles.edit_laufen.Visible='off';
+    handles.text_laufen.Visible='off';
+else
+    if ~(handles.checkbox_profil2.Value || handles.checkbox_profil3.Value || handles.checkbox_profil_manuell.Value) 
+    handles.checkbox_profil1.Value=1;
+    end
+end
+% --- Executes on button press in checkbox_profil2.
+function checkbox_profil2_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_profil2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_profil2
+if(get(hObject, 'Value')==1)
+    handles.checkbox_profil1.Value=0;
+    handles.checkbox_profil3.Value=0;
+    handles.checkbox_profil_manuell.Value=0;
+    handles.edit_geschwindigkeit.Visible='off';
+    handles.text_geschwindigkeit.Visible='off';
+    handles.edit_laufen.Visible='off';
+    handles.text_laufen.Visible='off';
+else
+    if ~(handles.checkbox_profil1.Value || handles.checkbox_profil3.Value || handles.checkbox_profil_manuell.Value) 
+    handles.checkbox_profil2.Value=1;
+    end
+end
+
+% --- Executes on button press in checkbox_profil3.
+function checkbox_profil3_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_profil3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_profil3
+if(get(hObject, 'Value')==1)
+    handles.checkbox_profil1.Value=0;
+    handles.checkbox_profil2.Value=0;
+    handles.checkbox_profil_manuell.Value=0;
+    handles.edit_geschwindigkeit.Visible='off';
+    handles.text_geschwindigkeit.Visible='off';
+    handles.edit_laufen.Visible='off';
+    handles.text_laufen.Visible='off';
+else
+    if ~(handles.checkbox_profil1.Value || handles.checkbox_profil2.Value || handles.checkbox_profil_manuell.Value) 
+    handles.checkbox_profil3.Value=1;
+    end
+end
+
+
+
+
+% --------------------------------------------------------------------
+function bsp_Callback(hObject, eventdata, handles)
+% hObject    handle to bsp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.checkbox_bsp1.Visible='on';
+handles.checkbox_bsp2.Visible='on';
+handles.checkbox_bsp3.Visible='on';
+
+
+% --- Executes on button press in checkbox_bsp1.
+function checkbox_bsp1_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_bsp1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_bsp1
+
+
+% --- Executes on button press in checkbox_bsp2.
+function checkbox_bsp2_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_bsp2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_bsp2
+
+
+% --- Executes on button press in checkbox_bsp3.
+function checkbox_bsp3_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_bsp3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_bsp3
+
+
+
+% --- Executes on button press in checkbox_koordinaten.
+function checkbox_koordinaten_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_koordinaten (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_koordinaten
+if(get(hObject, 'Value')==0)
+    handles.edit_lon.Visible='off';
+    handles.text_lon.Visible='off';
+    handles.edit_lat.Visible='off';
+    handles.text_lat.Visible='off';
+    
+else
+    handles.edit_lon.Visible='on';
+    handles.text_lon.Visible='on';
+    handles.edit_lat.Visible='on';
+    handles.text_lat.Visible='on';
 end

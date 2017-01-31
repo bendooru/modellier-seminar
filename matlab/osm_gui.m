@@ -90,7 +90,7 @@ function [X, D, T, ax] = osm_gui(d, m, fitness, varargin)
     title(ax, datum);
     drawnow;
     
-    [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness, wbh);
+    [X, D, T] = follow_osm(coord(1), coord(2), 1, tag, fitness);
     
     % OSM-Tiles einfügen
     fprintf('Plotting background tiles:\n');
