@@ -32,18 +32,25 @@ function tileBackground(xrange, yrange, ax)
     wb = waitbar(0, 'Aktualisiere Karte ...');
     karten = 0;
     karten_max = numel(xmin:xmax) * numel(ymin:ymax);
+    
+    % Fange (Netzwerk-)Fehler ab
+    try
+        for xx=xmin:xmax
+            for yy=ymin:ymax
+                TILE = gettile(xx, yy, zlevel);
 
-    for xx=xmin:xmax
-        for yy=ymin:ymax
-            TILE = gettile(xx, yy, zlevel);
+                image('XData', cornerLon((xx:xx+1)-xmin+1), ...
+                    'YData', cornerLat((yy:yy+1)-ymin+1), ...
+                    'CData', TILE, 'Parent', ax);
 
-            image('XData', cornerLon((xx:xx+1)-xmin+1), ...
-                'YData', cornerLat((yy:yy+1)-ymin+1), ...
-                'CData', TILE, 'Parent', ax);
-            
-            karten = karten + 1;
-            waitbar(karten/karten_max, wb);
+                karten = karten + 1;
+                waitbar(karten/karten_max, wb);
+            end
         end
+    catch ME
+        errordlg(getReport(ME, 'extended', 'hyperlinks', 'off'), 'Fehler');
+        close(wb);
+        rethrow(ME)
     end
     
     close(wb);

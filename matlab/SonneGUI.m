@@ -10,7 +10,6 @@ function SonneGUI
     
     createGUI;
     
-    
     %% Hilfsfunktionen
     function createGUI()
         % Erstellt alle GUI-Elemente, gibt Handle zurück, der diese enthält
@@ -23,15 +22,15 @@ function SonneGUI
         mmenu = uimenu(f, 'Label', 'Temporäre Dateien');
         tilemenu = uimenu(mmenu, 'Label', '.png-Tiledaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(~, ~) dirDelFun(tiledir), ...
+            'Callback', @(hObj, ~) dirDelFun(hObj, tiledir), ...
             'Tag', 'TileMenu');
         osmmenu = uimenu(mmenu, 'Label', '.osm-Kartendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(~, ~) dirDelFun(mapdir), ...
+            'Callback', @(hObj, ~) dirDelFun(hObj, mapdir), ...
             'Tag', 'OsmMenu');
         hgtmenu = uimenu(mmenu, 'Label', '.hgt-Höhendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(obj, ~) dirDelFun(obj, hgtdir), ...
+            'Callback', @(hObj, ~) dirDelFun(hObj, hgtdir), ...
             'Tag', 'HgtMenu');
         
         % Aktiviere Schaltflächen, falls Ordner existieren
@@ -47,15 +46,23 @@ function SonneGUI
         exmfiles = dir(fullfile('beispiele', '*.mat'));
         for i = 1:size(exmfiles, 1)
             filename = fullfile('beispiele', exmfiles(i).name);
-            load(filename, 'str');
-            uimenu(loadmenu, 'Label', str, ...
-                'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
+            loadedvar = load(filename, 'str');
+            if isfield(loadedvar, 'str')
+                uimenu(loadmenu, 'Label', loadedvar.str, ...
+                    'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
+            end
         end
         
         uimenu(bmenu, 'Label', 'Beispiel zurücksetzen', ...
             'Enable', 'off', ...
             'Callback', @clearExampleFcn, ...
             'Tag', 'ClearExMenu');
+        
+        uimenu(bmenu, 'Label', 'Momentane Daten speichern', ...
+            'Enable', 'off', ...
+            'CallBack', @saveDataFcn, ...
+            'Separator', 'on', ...
+            'Tag', 'SaveExpMenu');
         
         % Menüeintrag zum Beenden des Programms (auch mit Strg-W)
         uimenu(mmenu, 'Label', 'Beenden', 'Accelerator', 'W', ...
@@ -126,13 +133,6 @@ function SonneGUI
         lonlatedits.Sizes = [35 -1 35 -1];
         koordwahlfeld.Sizes = [-1 -1];
         
-        % Animiercheckbox
-        uicontrol('Parent', buttongroup, ...
-            'Style', 'checkbox', ...
-            'String', 'Animieren', ...
-            'Value', 0, ...
-            'Tag', 'AnimateCB');
-        
         % Zwischenraum
         uiextras.Empty('Parent', buttongroup);
         
@@ -150,7 +150,7 @@ function SonneGUI
             'Callback', @startCalcFcn, ...
             'Tag', 'LosButton');
         
-        buttongroup.Sizes = [90 120 270 250 100 -1 120];
+        buttongroup.Sizes = [90 120 270 250 -1 120];
         
         mainlayout.Sizes = [-1 60];
     end
@@ -171,23 +171,34 @@ function SonneGUI
         % lädt Variablen str, coord, tag, monat, fitness, X, T
         loadedvar = load(fname);
         
-        set(ghandles.TagEdit, {'String', 'Enable'}, ...
+        % Existierende Beispiele sollen nicht nocheinmal gespeichert werden können
+        set(ghandles.SaveExpMenu, 'Enable', 'off');
+        
+        set(ghandles.TagEdit, ...
+            { 'String',                     'Enable' }, ...
             { sprintf('%d', loadedvar.tag), 'off' });
-        set(ghandles.MonatEdit, {'String', 'Enable'}, ...
+        set(ghandles.MonatEdit, ...
+            { 'String',                       'Enable' }, ...
             { sprintf('%d', loadedvar.monat), 'off' });
         
-        set(ghandles.LaufEdit, {'String', 'Enable'}, ...
+        set(ghandles.LaufEdit, ...
+            { 'String',                                 'Enable'}, ...
             { sprintf('%d', loadedvar.fitness.f{1}(0)), 'off' });
         lplist = sprintf('%d,', loadedvar.fitness.walkpause);
-        set(ghandles.LaufPauseEdit, {'String', 'Enable'}, ...
+        set(ghandles.LaufPauseEdit, ...
+            { 'String',        'Enable' }, ...
             { lplist(1:end-1), 'off' });
         
-        set(ghandles.KoordManuellCheckB, {'Value', 'Enable'}, {1, 'off'});
+        set(ghandles.KoordManuellCheckB, ...
+            { 'Value', 'Enable' }, ...
+            { 1,       'off' });
         manuellCheckFcn(ghandles.KoordManuellCheckB);
         
-        set(ghandles.LonEdit, {'String', 'Enable'}, ...
+        set(ghandles.LonEdit, ...
+            { 'String',                          'Enable'}, ...
             { sprintf('%f', loadedvar.coord(1)), 'off' });
-        set(ghandles.LatEdit, {'String', 'Enable'}, ...
+        set(ghandles.LatEdit, ...
+            { 'String',                          'Enable'}, ...
             { sprintf('%f', loadedvar.coord(2)), 'off' });
         
         data = guidata(hObj);
@@ -197,7 +208,41 @@ function SonneGUI
         
         guidata(hObj, data);
         
+        startCalcFcn(ghandles.LosButton);
+        
         set(ghandles.ClearExMenu, 'Enable', 'on');
+    end
+
+    function saveDataFcn(hObj, ~)
+        ghandles = guihandles(hObj);
+        data = guidata(hObj);
+        
+        X = data.XData;
+        T = data.TData;
+        coord(1) = str2double(get(ghandles.LonEdit, 'String'));
+        coord(2) = str2double(get(ghandles.LatEdit, 'String'));
+        fitness.walkpause = sscanf(get(ghandles.LaufPauseEdit,'String'), '%d,', [2 Inf]);
+        speed = str2double(get(ghandles.LaufEdit, 'String'));
+        fitness.f = @(t) (speed);
+        tag   = str2double(get(ghandles.TagEdit,   'String'));
+        monat = str2double(get(ghandles.MonatEdit, 'String'));
+        
+        titstr = inputdlg('Kurzer Titel für Beispiel');
+        
+        str = sprintf('%s [%.6f, %.6f] (%d/%d)\n', titstr{1}, coord, tag, monat);
+        
+        n = size(dir('beispiele'), 1);
+        filename = sprintf('beispiel-%04d.mat', n+1);
+        
+        while size(dir(fullfile('beispiele', filename)), 1) > 0
+            n = n+1;
+            filename = sprintf('beispiel-%04d.mat', n);
+        end
+        
+        save(fullfile('beispiele', filename), ...
+            'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');
+        % TODO: füge Beispiel direkt dem Menü hinzu
+        set(hObj, 'Enable', 'off');
     end
 
     function manuellCheckFcn(hObj, ~)
@@ -215,10 +260,9 @@ function SonneGUI
     % wird bei Druck des 'Los'-Knopfes ausgeführt
     function startCalcFcn(hObj, ~)
         ghandles = guihandles(hObj);
+        set(hObj, 'Enable', 'off');
         
         % Knopf während Berechnung ausgrauen
-        set(hObj, 'Enable', 'off');
-        set(ghandles.ReAnimateButton, 'Visible', 'off');
         
         % evtl. Fehlerbehandlung hinzufügen
         tag   = str2double(get(ghandles.TagEdit,   'String'));
@@ -229,16 +273,33 @@ function SonneGUI
         % bisher nur konstante Funktion
         fitness.f = { @(t) speed };
         
-        % Entnimm Checkbox, ob Plot animiert werden soll
-        animateplot = get(ghandles.AnimateCB, 'Value');
+        coord(1) = str2double(get(ghandles.LonEdit, 'String'));
+        coord(2) = str2double(get(ghandles.LatEdit, 'String'));
+        
+        % Ab hier: teste auf valide Eingabe
+        monate = [31 28 31 30 31 30 31 31 30 31 30 31];
+        
+        if any(isnan([[tag monat speed], coord])) || monat < 1 || monat > 12 || ...
+                tag < 1 || tag > monate(monat) || size(fitness.walkpause, 1) ~= 2
+            errordlg('Invalide Eingaben');
+            
+            set(hObj, 'Enable', 'on');
+            set(ghandles.ReAnimateButton, 'Visible', 'off');
+            return
+        end
         
         if get(ghandles.KoordManuellCheckB, 'Value') == 0
-            coord = chooseStartingPoint(ghandles.MainAx);
+            try
+                coord = chooseStartingPoint(ghandles.MainAx);
+            catch 
+                set(hObj, 'Enable', 'on');
+                set(ghandles.ReAnimateButton, 'Visible', 'off');
+                return
+            end
+            
+            % Schreibe gefundenen Wert in entsprechende Edit-Felder
             set(ghandles.LonEdit, 'String', sprintf('%.6f', coord(1)));
             set(ghandles.LatEdit, 'String', sprintf('%.6f', coord(2)));
-        else
-            coord(1) = str2double(get(ghandles.LonEdit, 'String'));
-            coord(2) = str2double(get(ghandles.LatEdit, 'String'));
         end
         
         data = guidata(hObj);
@@ -258,32 +319,38 @@ function SonneGUI
                 opt = 'Elevation';
             end
             
-            [data.XData, ~, data.TData] = ...
-                follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
+            % follow_osm braucht Netzwerkzugriff: fange Fehler ab
+            try
+                [data.XData, ~, data.TData] = ...
+                    follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
+            catch
+                set(hObj, 'Enable', 'on');
+                set(ghandles.ReAnimateButton, 'Visible', 'off');
+                return
+            end
+
+            % Ermögliche, Daten zu speichern
+            set(ghandles.SaveExpMenu, 'Enable', 'on');
         end
         
         guidata(hObj, data);
         
         % beginne Plotten
         hold(ghandles.MainAx, 'on');
-    
         cla(ghandles.MainAx);
+        
         % Extrema
         xyRange = minmax(data.XData) + [-0.001, 0.001; -0.001, 0.001];
 
         tileBackground(xyRange(1, :), xyRange(2, :), ghandles.MainAx);
+        
+        % normaler, sofortiger Plot
+        h = plot(ghandles.MainAx, ...
+            data.XData(1, :), data.XData(2, :), '-r', 'LineWidth', 1.5);
 
-        if animateplot
-            animateRoute(data.XData, data.TData, ghandles.MainAx);
-        else
-            % normaler, sofortiger Plot
-            h = plot(ghandles.MainAx, ...
-                data.XData(1, :), data.XData(2, :), '-r', 'LineWidth', 1.5);
-            
-            data = guidata(hObj);
-            data.RouteLine = h;
-            guidata(hObj, data);
-        end
+        data = guidata(hObj);
+        data.RouteLine = h;
+        guidata(hObj, data);
         
         set(ghandles.ReAnimateButton, 'Visible', 'on');
 
@@ -303,7 +370,7 @@ function SonneGUI
         ghandles = guihandles(hObj);
         data = guidata(hObj);
         
-        set(hObj, 'Enable', 'off');
+        set([hObj, ghandles.LosButton], 'Enable', 'off');
         
         hold(ghandles.MainAx, 'on');
         delete(data.RouteLine);
@@ -317,7 +384,7 @@ function SonneGUI
         animateRoute(data.XData, data.TData, ghandles.MainAx);
         hold(ghandles.MainAx, 'off');
         
-        set(hObj, 'Enable', 'on');
+        set([hObj, ghandles.LosButton], 'Enable', 'on');
     end
 
     function animateRoute(X, T, ax)
@@ -413,6 +480,8 @@ function SonneGUI
     function dirExFun(dir, hObj)
         if isdir(dir)
             set(hObj, 'Enable', 'on');
+        else
+            set(hObj, 'Enable', 'off');
         end
     end
 

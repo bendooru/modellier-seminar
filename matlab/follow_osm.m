@@ -144,9 +144,9 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                     remote_xml = webread(api_name, options);
                 catch ME
                     fprintf('failed. Aborting calculation.\n');
-                    disp(getReport(ME, 'extended'));
+                    errordlg(getReport(ME, 'extended', 'hyperlinks', 'off'), 'Fehler');
                     [~] = toc;
-                    break;
+                    rethrow(ME);
                 end
                 time = toc;
 
