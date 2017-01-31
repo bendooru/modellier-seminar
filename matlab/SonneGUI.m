@@ -260,9 +260,10 @@ function SonneGUI
     % wird bei Druck des 'Los'-Knopfes ausgeführt
     function startCalcFcn(hObj, ~)
         ghandles = guihandles(hObj);
-        set(hObj, 'Enable', 'off');
         
         % Knopf während Berechnung ausgrauen
+        set(hObj, 'Enable', 'off');
+        set(ghandles.ReAnimateButton, 'Visible', 'off');
         
         % evtl. Fehlerbehandlung hinzufügen
         tag   = str2double(get(ghandles.TagEdit,   'String'));
@@ -284,7 +285,6 @@ function SonneGUI
             errordlg('Invalide Eingaben');
             
             set(hObj, 'Enable', 'on');
-            set(ghandles.ReAnimateButton, 'Visible', 'off');
             return
         end
         
@@ -293,7 +293,6 @@ function SonneGUI
                 coord = chooseStartingPoint(ghandles.MainAx);
             catch 
                 set(hObj, 'Enable', 'on');
-                set(ghandles.ReAnimateButton, 'Visible', 'off');
                 return
             end
             
@@ -325,7 +324,6 @@ function SonneGUI
                     follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
             catch
                 set(hObj, 'Enable', 'on');
-                set(ghandles.ReAnimateButton, 'Visible', 'off');
                 return
             end
 
