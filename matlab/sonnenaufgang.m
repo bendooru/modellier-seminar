@@ -1,6 +1,6 @@
 function [t_auf, visible, t_unter] = sonnenaufgang(p, tag)
     tag_dauer = 1440;
-    % Ausgangzeit sei 0 Uhr UTC an diesem Tag
+    % Ausgangzeit sei 12 Uhr UTC an diesem Tag
     t_auf = tag*tag_dauer;
     visible = true;
     

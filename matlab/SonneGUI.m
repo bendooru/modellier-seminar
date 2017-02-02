@@ -119,15 +119,16 @@ function SonneGUI
             'Value', 0, ...
             'Callback', @manuellCheckFcn, ...
             'Tag', 'KoordManuellCheckB');
-        lonlatedits = uiextras.HBox('Parent', koordwahlfeld, 'Visible', 'off', ...
-            'Tag', 'LonLatEdits');
+        lonlatedits = uiextras.HBox('Parent', koordwahlfeld);
         uicontrol('Parent', lonlatedits, 'Style', 'text', 'String', 'Lon.:');
         uicontrol('Parent', lonlatedits, ...
             'Style', 'edit', 'String', '0', ...
+            'Enable', 'off', ...
             'Tag', 'LonEdit');
         uicontrol('Parent', lonlatedits, 'Style', 'text', 'String', 'Lat.:');
         uicontrol('Parent', lonlatedits, ...
             'Style', 'edit', 'String', '0', ...
+            'Enable', 'off', ...
             'Tag', 'LatEdit');
        
         % Größen der Felder
@@ -182,9 +183,16 @@ function SonneGUI
             { 'String',                       'Enable' }, ...
             { sprintf('%d', loadedvar.monat), 'off' });
         
+        % sicherheitshalber prüfen, ob Cell-Array
+        if iscell(loadedvar.fitness.f)
+            fun = loadedvar.fitness.f{1};
+        else
+            fun = loadedvar.fitness.f;
+        end
+        
         set(ghandles.LaufEdit, ...
             { 'String',                                 'Enable'}, ...
-            { sprintf('%d', loadedvar.fitness.f{1}(0)), 'off' });
+            { sprintf('%d', fun(0)), 'off' });
         lplist = sprintf('%d,', loadedvar.fitness.walkpause);
         set(ghandles.LaufPauseEdit, ...
             { 'String',        'Enable' }, ...
@@ -224,7 +232,7 @@ function SonneGUI
         coord(2) = str2double(get(ghandles.LatEdit, 'String'));
         fitness.walkpause = sscanf(get(ghandles.LaufPauseEdit,'String'), '%d,', [2 Inf]);
         speed = str2double(get(ghandles.LaufEdit, 'String'));
-        fitness.f = @(t) (speed);
+        fitness.f = { @(t) (speed) };
         tag   = str2double(get(ghandles.TagEdit,   'String'));
         monat = str2double(get(ghandles.MonatEdit, 'String'));
         
@@ -255,12 +263,12 @@ function SonneGUI
         ghandles = guihandles(hObj);
         
         if get(hObj, 'Value') == 1
-            visval = 'on';
+            enval = 'on';
         else
-            visval = 'off';
+            enval = 'off';
         end
         
-        set(ghandles.LonLatEdits, 'Visible', visval);
+        set([ghandles.LonEdit, ghandles.LatEdit], 'Enable', enval);
     end
 
     % wird bei Druck des 'Los'-Knopfes ausgeführt
