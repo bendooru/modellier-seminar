@@ -3,7 +3,7 @@
 % lat = 49.444722;
 % lat = 49.439343; lon = 7.733482;
 % Tokio: rechnet lange!
-coord = [139.775, 35.68];
+% coord = [139.775, 35.68];
 % % TU KL
 % coord = [7.753056, 49.423889];
 % coord = [7.311105, 49.712424];
@@ -14,15 +14,19 @@ coord = [139.775, 35.68];
 % Irgendwo anders in Japan
 % coord = [132.9994, 33.3704];
 % 
-fitness.walkpause = [200; 30];
-fitness.f = { @(t) 90 };
 
-tag = 21;
-monat = 6;
+coord = [28.929557, 69.051942];
+fitness.walkpause = [180 120; 30 10];
+fitness.f = { @(t) 100 };
 
-exmstr = 'Tokio';
+tag = 3;
+monat = 7;
+
+exmstr = 'Grenze RU-SWE-NOR';
 str = sprintf('%s [%.6f, %.6f] (%d/%d)\n', exmstr, coord, tag, monat);
 
 % [X, ax] = follow_osm_free(coord(1), coord(2), 1.5, 90, 172);
 % ax = osm_gui(21, 6, fitness, 'Animate', 'Coord', [7 49]);
-[X, ~, T] = follow_osm(coord(1), coord(2), 1, day(tag, monat), fitness);
+[X, ~, T] = follow_osm(coord(1), coord(2), 1, day(tag, monat), fitness, 'NoElevation');
+
+save('beispiele/ex04etwas.mat', 'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');

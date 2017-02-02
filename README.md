@@ -7,6 +7,7 @@ Repository zur Speicherung relevanter Dateien:
  * Infos zur Overpass-OSM-API: https://wiki.openstreetmap.org/wiki/Overpass_API
  * Details zur Berechnung von Kachelnamen: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
  * GUI Layout Toolbox https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox?requestedDomain=www.mathworks.com
+    * Dokumentation: http://cda.psych.uiuc.edu/matlab_programming_class_2012/guide/GUILayout_v1p10/GUILayout-v1p10/layoutHelp/index.html
    liefert etwas bessere Ergebnisse bei GUI-Erstellung
  * Funktion `follow_osm` berechnet Route ausgehend von Straßen- und Weg-Daten.
    Heruntergeladene .osm-Dateien werden im Unterverzeichnis `maps` gespeichert.

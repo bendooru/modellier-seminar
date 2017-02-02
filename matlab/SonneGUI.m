@@ -39,7 +39,8 @@ function SonneGUI
         dirExFun(hgtdir, hgtmenu);
         
         bmenu = uimenu(f, 'Label', 'Beispiele');
-        loadmenu = uimenu(bmenu, 'Label', 'Beispiel laden ...');
+        loadmenu = uimenu(bmenu, 'Label', 'Beispiel laden ...', ...
+            'Tag', 'ExmMenu');
         
         % finde .mat-Dateien im beispiel-Ordner und fürge entsprechende Menü-Eintrgäge
         % hinzu
@@ -239,9 +240,14 @@ function SonneGUI
             filename = sprintf('beispiel-%04d.mat', n);
         end
         
-        save(fullfile('beispiele', filename), ...
-            'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');
-        % TODO: füge Beispiel direkt dem Menü hinzu
+        filename = fullfile('beispiele', filename);
+        
+        % speichere benötigte Variablen
+        save(filename, 'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');
+        
+        % füge Beispiel direkt dem Menü hinzu
+        uimenu(ghandles.ExmMenu, 'Label', str, ...
+            'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
         set(hObj, 'Enable', 'off');
     end
 

@@ -7,8 +7,8 @@ earth_rad_klein = earth_rad - 1;
 hold on;
 
 % in Breitengraden
-lon = 180 + 7; % ←→
-lat = 32; % ↑↓
+lon = 180 + 49; % ←→
+lat = 7; % ↑↓
 
 steps = 5000;
 
