@@ -4,6 +4,7 @@ Repository zur Speicherung relevanter Dateien:
 
 * `matlab` enthält Matlab-Dateien des Sonnen-Modells.
  * erfordert nun Matlab-Extradateien `readhgt` im Matlab-Pfad
+ * Matlab-Skript SunAzEl zur genauen Bestimmung des Sonnenstandes: https://de.mathworks.com/matlabcentral/fileexchange/23051-vectorized-solar-azimuth-and-elevation-estimation
  * Infos zur Overpass-OSM-API: https://wiki.openstreetmap.org/wiki/Overpass_API
  * Details zur Berechnung von Kachelnamen: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
  * GUI Layout Toolbox https://de.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox?requestedDomain=www.mathworks.com

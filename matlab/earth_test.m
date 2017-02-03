@@ -21,7 +21,7 @@ T = zeros(3, steps);
 t_0 = sonnenaufgang(p_0, t_0);
 for i = 1:steps
     T(:, i) = p_0;
-    p_0 = earth_path(p_0, t_0, delta_t, 90, earth_rad);
+    [~, p_0] = earth_path(p_0, t_0, delta_t, 90, earth_rad);
     t_0 = t_0 + delta_t;
 end
 

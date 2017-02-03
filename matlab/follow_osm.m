@@ -258,7 +258,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             
         % benutze bereits geschriebene Funktion earth_path um die optimale nächste
         % Position zu bestimmen
-        [p_optimal, visible] = earth_path(p, t, delta_t, speed, earth_radius);
+        [visible, p_optimal] = earth_path(p, t, delta_t, speed, earth_radius);
 
         % betrachte relative Bewegungsrichtung, normiere
         richtung_optimal = (p_optimal - p)/norm(p_optimal - p);

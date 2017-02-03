@@ -42,8 +42,6 @@ function [t_auf, visible, t_unter] = sonnenaufgang(p, tag)
     % bestimmt wie in earth_path die Sichtbarkeit über den Winkel zum
     % Normalenvektor der Tangentialebene unsere Position
     function vis = sun_visible(t)
-        sonPos = sonnen_pos(t) - p;
-        sun_ele = vector_angle(p, sonPos);
-        vis = 0 <= sun_ele && sun_ele <= pi/2;
+        vis = earth_path(p, t, 1, 100, norm(p));
     end
 end
