@@ -45,7 +45,7 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     % brich ab, sobald Sonne nicht weiter sichtbar oder 24 Stunden vergangen
     while t < t_0 + 1440 && visible
         i = i+1;
-        [p, visible] = earth_path(p, t, delta_t, speed, earth_rad);
+        [visible, p] = earth_path(p, t, delta_t, speed, earth_rad);
         
         X(:, i) = p;
         [S(1,i), S(2, i), ~] = cart2sph(X(1,i), X(2,i), X(3,i));
@@ -82,7 +82,7 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     S = S(:,1:i);
     E = E(:,1:i);
     T = T(:,1:i-1);
-    figure; plot(T, V(:,1:i-1));
+    figure; plot(datetime('01-Jan-2017 00:00:00') +  minutes(T), V(:,1:i-1));
     AREA = zeros(1,4);
     % verkleinere umschließendes Rechteck
     AREA([3 1]) = min(S,[],2) - 0.05;
