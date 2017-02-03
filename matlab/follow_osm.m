@@ -64,7 +64,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     sackgassen_uuid = zeros(1,0);
     ist_sackgasse = false;
     
-    wbh = waitbar(0, 'Calculating route ...');
+    wbh = waitbar(0, 'Berechne Route ...');
     
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end

@@ -1,7 +1,6 @@
-function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
+function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
     % wird
-    % übergib 'TimePlot' als letztes Argument, um Distanz/Zeit zu plotten
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
@@ -9,19 +8,34 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
     
     % Werte initialisieren
     p = lonlat2vec(lon, lat, earth_radius);
-    [t, visible] = sonnenaufgang(p, tag);
+    [t, visible, t_unter] = sonnenaufgang(p, tag);
     % maximal einen Tag lang
     t_end = t + 1440;
+    day_dur = t_unter - t;
     
     % initialisiere Arrays leer, werden dynamisch vergrößert:
     % Folge der besuchten Koordinaten, betrachtete Zeitpunkte und zurückgelegte Distanz
     X = coord;
     T = t;
-    D = 0;
+    D = zeros(1, 0); D(1, 1) = 0;
+    E = zeros(1, 0); E(1,1) = 0;
+    
+    if size(fitness.walkpause, 1) ~= 2
+        fprintf('Array specifiying walkling/pausing times has incorrect size');
+        return;
+    end
+    
+    consider_elevation = ~any(strcmpi(varargin, 'NoElevation'));
+    
+    endlastbreak = t;
+    fnpperiod = size(fitness.walkpause, 2);
+    fnfperiod = size(fitness.f, 2);
+    
+    pauseidx = 1;
     
     % Abstand zu Grenzen in Längen-/Breitengraden
-    br_lat = 0.004;
-    br_lon = 0.006;
+    br_lat = 0.003;
+    br_lon = 0.003;
     
     % Initialisiere Bounding Box als Punkt
     bounds = [lat lon lat lon];
@@ -29,12 +43,7 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
     step = 1;
     
     maps_used = 0;
-    
-    % figure in die die Karte geplottet wird
-    fig = figure;
-    ax = axes('Parent', fig);
-    axis(ax, 'equal');
-    hold(ax, 'on');
+    ausweichen = false;
     
     % Format für Karten-Dateinamen
     map_filename_spec = 'map-%f_%f_%f_%f.osm';
@@ -44,10 +53,37 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
         mkdir(map_dir_name);
     end
     
+    if consider_elevation && ~isdir('hgt')
+        mkdir('hgt');
+    end
+    
+    wbh = waitbar(0, 'Berechne Route ...');
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
+        % interpretiere die Laufzeit-Pause-Liste als zyklisch
+        pidx = mod(pauseidx - 1, fnpperiod) + 1;
+        
+        % überprüfe, ob wir Pause machen wollen
+        if t - endlastbreak > fitness.walkpause(1, pidx)
+            t = t + fitness.walkpause(2, pidx);
+            endlastbreak = t;
+            pauseidx = pauseidx + 1;
+            
+            step = step + 1;
+            X(:, step) = X(:, step-1);
+            T(1, step) = t;
+            D(1, step) = D(1, step-1);
+            E(1, step) = E(1, step-1);
+            continue;
+        end
+        
         % prüfe ob wir uns zu nah an der Grenze der verfügbaren Daten befinden
         if boundaryDistance(coord, bounds) < 0.0005
+            % Statusupdate
+            waitbar((t-T(1, 1))/day_dur, wbh, ...
+                sprintf('Berechne Route ... (%d Karten verwendet)', maps_used));
+            
             % Distanz zu Grenze ist gering, lade neue Karte
             maps_used = maps_used + 1;
             local_map_found = false;
@@ -139,25 +175,51 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
                 fprintf('done.                     [%9.6f s]\n', time);
-                
-                plot_streets(ax, parsed_osm);
             catch
                 [~] = toc;
                 fprintf('empty map.\n');
                 map_nonempty = false;
+            end
+            
+            % Kümmern uns um Höhendaten, falls gewünscht
+            if consider_elevation
+                R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
+                    'interp', 'outdir', 'hgt', ...
+                    'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
+                E(1, step) = get_elevation(coord(1), coord(2));
             end
         end
         
         % Beginne Berechnung
         step = step + 1;
         
-        [p, visible] = earth_path(p, t, delta_t, speed, earth_radius);
+        speed = fitness.f{mod(pauseidx - 1, fnfperiod) + 1}(t - endlastbreak);
+        
+        p_prev = p;
+        [visible, p] = earth_path(p, t, delta_t, speed, earth_radius);
         [coord(1), coord(2), ~] = cart2sph(p(1), p(2), p(3));
         coord = rad2deg(coord);
         
+        if ausweichen
+            if dot(collision_dir, coord - X(:, step-1)) < 0
+                collision_dir = -collision_dir;
+            end
+            
+            coordTemp = X(:, step-1) + collision_dir;
+            dist = norm(p_prev - lonlat2vec(coordTemp(1), coordTemp(2), earth_radius));
+            
+            coord = X(:, step-1) + (speed*delta_t) .* collision_dir/dist;
+            p = lonlat2vec(coord(1), coord(2), earth_radius);
+            
+            distance = norm(p-p_prev);
+        else
+            distance = speed*delta_t;
+        end
+        
         if map_nonempty
             % überprüfe auf Kollisionen
-            collisions = zeros(1,0);
+            collision = Inf;
+            collision_dir = [0;0];
             
             for way = parsed_osm.way.nd
                 waysize = size(way{1}, 2);
@@ -177,8 +239,8 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     
                     A = [coord-X(:,step-1), wayxy(:,ndi_prev)-wayxy(:,ndi)];
                     
-                    if det(A) == 0
-                        % Laufen parallel zu betrachtetem Wegsegment
+                    if rcond(A) < 1e-22
+                        % Laufen nahezu parallel zu betrachtetem Wegsegment
                         continue;
                     end
                     
@@ -186,38 +248,49 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
                     sol = A\b;
                     
                     % Kollision liegt auf dem Laufweg
-                    if all(sol >= 0) && all(sol <= 1)
-                        coord = (coord - X(:,step-1))*sol(1) + X(:,step-1);
-                        p = lonlat2vec(coord(1), coord(2), earth_radius);
-                        
-                        collisions(1, end+1) = sol(1);
+                    if all(sol >= 0) && all(sol <= 1) && sol(1) < collision
+                        collision = sol(1);
+                        collision_dir = wayxy(:, ndi) - wayxy(:, ndi_prev);
                     end
                 end
             end
+            if collision <= 1
+                %coeff = norm(lonlat2vec(coord(1), coord(2), earth_radius) ...
+                %   -lonlat2vec(X(1, step-1), X(2, step-1), earth_radius)) * collision;
+                %coeff = max(0, coeff-1)/coeff;
+                coeff = 0.9 * collision;
+                coord = (coord - X(:,step-1)) * coeff + X(:,step-1);
+                p = lonlat2vec(coord(1), coord(2), earth_radius);
+                
+                distance = distance * coeff;
+                
+                ausweichen = true;
+            else
+                ausweichen = false;
+            end
         end
         
-        if size(collisions, 2) > 0
-            s = min(collisions);
-            
-            coord = (coord - X(:,step-1)) * 0.99 *s + X(:,step-1);
-            p = lonlat2vec(coord(1), coord(2), earth_radius);
+        if consider_elevation
+            E(1, step) = get_elevation(coord(1), coord(2));
+            speed = (speed/6) * tobler( (E(step) - E(step-1))/distance );
+        else
+            E(1, step) = 0;
         end
         
-        t = t + delta_t;
+        
+        if distance/speed < 0.1*delta_t
+            t = t + delta_t;
+        else
+            t = t + distance/speed;
+        end
         
         X(:, step) = coord;
         T(step) = t;
-        D(step) = D(step-1) + speed*delta_t;
+        D(1, step) = D(1, step-1) + distance;
     end
     
-    % Plotte gefundene Route
-    fprintf('\nFinished calculating route, plotting ... ');
-    plot(ax, X(1, :), X(2, :), '-r', 'LineWidth', 2);
-    hold(ax, 'off');
-    xlabel(ax, 'Longitude (°)');
-    ylabel(ax, 'Latidude (°)');
-    title(ax, datestr(datetime('2000-12-31') + tag, 'mmmm dd'));
-    fprintf('done.\n');
+    close(wbh);
+    fprintf('Done.\n');
     
     % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der
     % Unendlich-Norm
@@ -228,10 +301,14 @@ function [X, ax] = follow_osm_free(lon, lat, delta_t, speed, tag)
             d = min(abs(bnd([2 1 4 3]) - repmat(c', 1, 2)));
         end
     end
-
-    % konvertiere Node-Index in einen 3D-Vektor
-    function pt = osmnode2vec(idx)
-        pt = lonlat2vec(parsed_osm.node.xy(1, idx), ...
-            parsed_osm.node.xy(2, idx), earth_radius);
+    
+    % Toblers Wanderfunktion in km/h
+    function v = tobler(slope)
+        v = 6 * exp( (-3.5) * abs(slope + 0.05));
+    end
+    
+    % interpoliere Höhe aus 4 umliegenden Punkten
+    function elev = get_elevation(lon, lat)
+        elev = interp2(R.lat, R.lon, double(R.z'), lat, lon);
     end
 end
