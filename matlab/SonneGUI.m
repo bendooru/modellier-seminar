@@ -6,11 +6,13 @@ function SonneGUI
     maxLat = rad2deg(atan(sinh(pi)));
     tiledir = 'tiles';
     mapdir  = 'maps';
+    mapfreedir = 'maps-free';
     hgtdir  = 'hgt';
     
     createGUI;
     
     %% Hilfsfunktionen
+    % erstellt alle Gui-Objekte
     function createGUI()
         % Erstellt alle GUI-Elemente, gibt Handle zurück, der diese enthält
         f = figure('Name', 'Immer der Sonn'' entgegen', ...
@@ -19,16 +21,31 @@ function SonneGUI
             'NumberTitle', 'off');
         
         % Menüliste
-        mmenu = uimenu(f, 'Label', 'Temporäre Dateien');
-        tilemenu = uimenu(mmenu, 'Label', '.png-Tiledaten löschen', ...
+        % allgemeine Menüeinträge
+        mmenu = uimenu(f, ...
+            'Label', 'Allgemein');
+        uimenu(mmenu, ...
+            'Label', 'Laufe nur entlang Straßen', 'Checked', 'on', ...
+            'Callback', @osmFunMenuFun, ...
+            'Tag', 'OsmFunMenu');
+        tilemenu = uimenu(mmenu, ...
+            'Label', 'PNG-Tiledaten löschen', ...
             'Enable', 'off', ...
+            'Separator', 'on', ...
             'Callback', @(hObj, ~) dirDelFun(hObj, tiledir), ...
             'Tag', 'TileMenu');
-        osmmenu = uimenu(mmenu, 'Label', '.osm-Kartendaten löschen', ...
+        osmmenu = uimenu(mmenu, ...
+            'Label', 'OSM-Kartendaten löschen', ...
             'Enable', 'off', ...
             'Callback', @(hObj, ~) dirDelFun(hObj, mapdir), ...
             'Tag', 'OsmMenu');
-        hgtmenu = uimenu(mmenu, 'Label', '.hgt-Höhendaten löschen', ...
+        osmfreemenu = uimenu(mmenu, ...
+            'Label', 'OSM-Kartendaten ohne Straßen löschen', ...
+            'Enable', 'off', ...
+            'Callback', @(hObj, ~) dirDelFun(hObj, mapfreedir), ...
+            'Tag', 'OsmFreeMenu');
+        hgtmenu = uimenu(mmenu, ...
+            'Label', 'HGT-Höhendaten löschen', ...
             'Enable', 'off', ...
             'Callback', @(hObj, ~) dirDelFun(hObj, hgtdir), ...
             'Tag', 'HgtMenu');
@@ -36,10 +53,26 @@ function SonneGUI
         % Aktiviere Schaltflächen, falls Ordner existieren
         dirExFun(tiledir, tilemenu);
         dirExFun(mapdir, osmmenu);
+        dirExFun(mapfreedir, osmfreemenu);
         dirExFun(hgtdir, hgtmenu);
         
-        bmenu = uimenu(f, 'Label', 'Beispiele');
-        loadmenu = uimenu(bmenu, 'Label', 'Beispiel laden ...', ...
+        zmenu = uimenu(f, ...
+            'Label', 'Zoom-Modus');
+        uimenu(zmenu, ...
+            'Label', 'Karten-Zoom aktivieren', ...
+            'Enable', 'off', ...
+            'Callback', @zoomStartFcn, ...
+            'Tag', 'ZoomStartMenu');
+        uimenu(zmenu, ...
+            'Label', 'Zoom zurücksetzen', ...
+            'Enable', 'off', ...
+            'Callback', @zoomResetFcn, ...
+            'Tag', 'ZoomResetMenu');
+        
+        bmenu = uimenu(f, ...
+            'Label', 'Beispiele');
+        loadmenu = uimenu(bmenu, ...
+            'Label', 'Beispiel laden ...', ...
             'Tag', 'ExmMenu');
         
         % finde .mat-Dateien im beispiel-Ordner und fürge entsprechende Menü-Eintrgäge
@@ -66,7 +99,9 @@ function SonneGUI
             'Tag', 'SaveExpMenu');
         
         % Menüeintrag zum Beenden des Programms (auch mit Strg-W)
-        uimenu(mmenu, 'Label', 'Beenden', 'Accelerator', 'W', ...
+        uimenu(mmenu, ...
+            'Label', 'Beenden', ...
+            'Accelerator', 'W', ...
             'Separator', 'on', ...
             'Callback', @(~, ~) delete(f));
         
@@ -303,6 +338,8 @@ function SonneGUI
         end
         
         if get(ghandles.KoordManuellCheckB, 'Value') == 0
+            % bei Herunterladen von Kacheln kann es zu Netzwerkfehlern kommen
+            % fange ab und stoppe Ausführung
             try
                 coord = chooseStartingPoint(ghandles.MainAx);
             catch 
@@ -332,10 +369,17 @@ function SonneGUI
                 opt = 'Elevation';
             end
             
+            % Wähle Funktion je nachdem, ob Option gecheckt ist
+            if strcmpi(get(ghandles.OsmFunMenu, 'Checked'), 'on')
+                follow_fun = @follow_osm;
+            else
+                follow_fun = @follow_osm_free;
+            end
+            
             % follow_osm braucht Netzwerkzugriff: fange Fehler ab
             try
                 [data.XData, ~, data.TData] = ...
-                    follow_osm(coord(1), coord(2), 1, tagj, fitness, opt);
+                    follow_fun(coord(1), coord(2), 1, tagj, fitness, opt);
             catch
                 set(hObj, 'Enable', 'on');
                 return
@@ -371,10 +415,11 @@ function SonneGUI
         % Aktiviere Schaltflächen, falls Ordner existieren
         dirExFun(tiledir, ghandles.TileMenu);
         dirExFun(mapdir, ghandles.OsmMenu);
+        dirExFun(mapfreedir, ghandles.OsmFreeMenu);
         dirExFun(hgtdir, ghandles.HgtMenu);
         
         % nach Berechnung Los-Knopf wieder freigeben
-        set(hObj, 'Enable', 'on');
+        set([hObj, ghandles.ZoomStartMenu], 'Enable', 'on');
     end
 
     % Animiere gefundene route erneut
@@ -399,6 +444,82 @@ function SonneGUI
         set([hObj, ghandles.LosButton], 'Enable', 'on');
     end
 
+    function zoomStartFcn(hObj, ~)
+        % Funktion führt nur aus, falls sie nicht bereits ausgeführt wird
+        if strcmpi(get(hObj, 'Checked'), 'off')
+            set(hObj, 'Checked', 'on');
+            ghandles = guihandles(hObj);
+            
+            ax = ghandles.MainAx;
+            
+            oldtitle = get(get(ax, 'Title'), 'String');
+            
+            title(ax, 'Linksklick reinzoomen, Rechtsklick rauszoomen, Escape beendet');
+            
+            zoomCenter = [0;0];
+            
+            % bleibe im Zoommodus, bis Escape gedrückt wird
+            while true
+                [zoomCenter(1), zoomCenter(2), button] = ginput(1);
+                if ~isscalar(button)
+                    continue;
+                end
+                
+                % Fallunterscheidung
+                switch button
+                    case 27 % Escape
+                        break;
+                    case 1  % Linksklick
+                        zoom = 1;
+                    case 3  % Rechtsklick
+                        zoom = -1;
+                    otherwise
+                        continue;
+                end
+            
+                % setze gewählten Punkt als neuen Mittelpunkt
+                % halbiere oder verdopple Breite und Höhe je nach Maustaste
+                xRange = zoomCenter(1) + (range(ax.XLim)*2^(-1-zoom)) .* [-1, 1];
+                yRange = zoomCenter(2) + (range(ax.YLim)*2^(-1-zoom)) .* [-1, 1];
+                
+                % Lösche alle Children von ax, die vom Typ Image sind
+                delete(ax.Children(strcmpi(get(ax.Children, 'Type'), 'image')));
+                
+                % zeichne Hintergrund mit neuen Koordinatengrenzen neu
+                tileBackground(xRange, yRange, ax);
+                
+                imgVec = strcmpi(get(ax.Children, 'Type'), 'image');
+                % Children von Ax umordnen, damit Route über Kacheln liegt
+                set(ax, 'Children', ax.Children([find(not(imgVec)); find(imgVec)]));
+            end
+            
+            title(ax, oldtitle);
+            
+            set(hObj, 'Checked', 'off');
+            set(ghandles.ZoomResetMenu, 'Enable', 'on');
+        end
+    end
+
+    function zoomResetFcn(hObj, ~)
+        ghandles = guihandles(hObj);
+        data = guidata(hObj);
+        
+        xyRange = minmax(data.XData) + [-0.001, 0.001; -0.001, 0.001];
+        
+        ax = ghandles.MainAx;
+        
+        % Wiederhole hier das gleiche wie in obiger FUnktion
+        delete(ax.Children(strcmpi(get(ax.Children, 'Type'), 'image')));
+        
+        tileBackground(xyRange(1, :), xyRange(2, :), ghandles.MainAx);
+        
+        imgVec = strcmpi(get(ax.Children, 'Type'), 'image');
+        set(ax, 'Children', ax.Children([find(not(imgVec)); find(imgVec)]));
+        
+        set(hObj, 'Enable', 'off');
+    end
+
+    % plottet gefundene Route als Animation
     function animateRoute(X, T, ax)
         data = guidata(ax);
         
@@ -419,11 +540,11 @@ function SonneGUI
             % limitrate erhöht Performance, es wir aber sehr schnell geplottet
             drawnow limitrate;
             
-            % Warte 1/60 Sekunde (~ 1 Frame für meiste Bildschirme)
+            % Warte 1/60 Sekunde (etwaige Bildwiederholrate der meisten Bildschirme)
             pause(1/60);
         end
         
-        % Mache Handels 'global'
+        % Mache Handles 'global'
         data.PosMarker = p;
         data.RouteLine = h;
         
@@ -486,6 +607,16 @@ function SonneGUI
                 zoomstep = zoomstep + 1;
             end
         end
+    end
+
+    % Toggle Checkbox-Menüeintrag
+    function osmFunMenuFun(hObj, ~)
+        if strcmpi(get(hObj, 'Checked'), 'on')
+            checkval = 'off';
+        else
+            checkval = 'on';
+        end
+        set(hObj, 'Checked', checkval);
     end
     
     % Funktion für TMP-Datei-Löschmenü
