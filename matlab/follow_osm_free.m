@@ -20,6 +20,14 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     D = zeros(1, 0); D(1, 1) = 0;
     E = zeros(1, 0); E(1,1) = 0;
     
+    lineplot = any(strcmpi(varargin, 'LinePlot'));
+    if lineplot
+        fig = figure;
+        ax = axes('Parent', fig);
+        daspect(ax, [1, 0.4725, 1]);
+        hold(ax, 'on');
+    end
+    
     if size(fitness.walkpause, 1) ~= 2
         fprintf('Array specifiying walkling/pausing times has incorrect size');
         return;
@@ -182,11 +190,15 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             end
             
             % Kümmern uns um Höhendaten, falls gewünscht
-            if consider_elevation
+            if consider_elevation && abs(coord(2)) < 60
                 R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
                     'interp', 'outdir', 'hgt', ...
                     'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
                 E(1, step) = get_elevation(coord(1), coord(2));
+            end
+            
+            if lineplot && map_nonempty 
+                plot_streets(ax, parsed_osm);
             end
         end
         
@@ -270,7 +282,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             end
         end
         
-        if consider_elevation
+        if consider_elevation && abs(coord(2)) < 60
             E(1, step) = get_elevation(coord(1), coord(2));
             speed = (speed/6) * tobler( (E(step) - E(step-1))/distance );
         else
@@ -290,6 +302,11 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     end
     
     close(wbh);
+    
+    if lineplot
+        plot(X(1, :), X(2, :), 'r', 'LineWidth', 1.5);
+    end
+    
     fprintf('Done.\n');
     
     % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der

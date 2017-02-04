@@ -199,7 +199,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             N(1, step) = parsed_osm.node.id(node_idx);
             
             % Kümmern uns um Höhendaten, falls gewünscht
-            if consider_elevation
+            if consider_elevation && abs(coord(2)) < 60
                 R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
                     'interp', 'outdir', 'hgt', ...
                     'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
@@ -299,7 +299,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
         
-            if consider_elevation
+            if consider_elevation && abs(coord(2)) < 60
                 E(1, step) = get_elevation(lon, lat);
                 speed = (speed/6) * tobler( (E(step) - E(step-1))/distance_step );
             else
