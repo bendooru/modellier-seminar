@@ -290,6 +290,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         
         distance_step = norm(vec_neighbor(:,max_index) - p);
         
+        % distance_step sollte nicht null sein
         if distance_step > 0
             node_idx_prev = node_idx;
             node_idx = neighbor_idxs(max_index);
@@ -299,6 +300,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             coord = parsed_osm.node.xy(:,node_idx);
             lon = coord(1); lat = coord(2);
         
+            % Finde Höhendaten für derzeitige Position
+            % Beachte, dass für |LAT| >= 60 keine solchen vorliegen
             if consider_elevation && abs(coord(2)) < 60
                 E(1, step) = get_elevation(lon, lat);
                 speed = (speed/6) * tobler( (E(step) - E(step-1))/distance_step );

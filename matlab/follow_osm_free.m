@@ -282,6 +282,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             end
         end
         
+        % Finde Höhendaten für derzeitige Position
+        % Beachte, dass für |LAT| >= 60 keine solchen vorliegen
         if consider_elevation && abs(coord(2)) < 60
             E(1, step) = get_elevation(coord(1), coord(2));
             speed = (speed/6) * tobler( (E(step) - E(step-1))/distance );
@@ -289,7 +291,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             E(1, step) = 0;
         end
         
-        
+        % Falls Bewegung zu wenig Zeit benötigt, lass delta_t Minuten verstreichen
         if distance/speed < 0.1*delta_t
             t = t + delta_t;
         else
