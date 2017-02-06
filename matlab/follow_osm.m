@@ -349,7 +349,12 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     end
     
     % interpoliere Höhe aus 4 umliegenden Punkten
+    % verkleinern der Eingabe erhöht Performance von interp2 _immens_
     function elev = get_elevation(lon, lat)
-        elev = interp2(R.lat, R.lon, double(R.z'), lat, lon);
+        idxlat = findNearest(lat, R.lat);
+        idxlon = findNearest(lon, R.lon);
+        rLat = max(1, idxlat-1):min(size(R.lat, 1), idxlat+1);
+        rLon = max(1, idxlon-1):min(size(R.lon, 2), idxlon+1);
+        elev = interp2(R.lat(rLat), R.lon(rLon), double(R.z(rLat, rLon)'), lat, lon);
     end
 end
