@@ -241,20 +241,26 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
             num_neighbors = size(neighbor_idxs, 1);
             
+            remember_intersections = 3;
+            
             % Zykelprävention
-            lastvisited_idx = find(N(1, 1:end-1) == N(1, end), 1, 'last');
-            % prüfe, ob Knoten bereits einmal besucht
-            if isscalar(lastvisited_idx)
-                % prüfe, ob genug Distanz seit letztem Besuch zurückgelegt wurde
-                if lastvisited_idx > 1 && D(1, end) - D(1, lastvisited_idx) < 1000
-                    % prüfe, ob wir uns in gleicher Konfiguration befinden
-                    if N(end-1) == N(lastvisited_idx-1)
-                        % entferne damals ausgesuchten Nachbar als Option
-                        neighbor_idxs = neighbor_idxs(neighbor_idxs ~= ...
-                            find(parsed_osm.node.id==N(1, lastvisited_idx+1, 1)));
-                        num_neighbors = size(neighbor_idxs, 1);
-                    end
+            lastvisited_idx = find(N(1, 1:end-1) == N(1, end), ...
+                remember_intersections, 'last');
+            idx = numel(lastvisited_idx);
+            
+            % prüfe, ob genug Distanz seit letztem Besuch zurückgelegt wurde
+            while idx > 0 && lastvisited_idx(idx) > 1 && ...
+                    num_neighbors > 1 && ...
+                    D(1, end) - D(1, lastvisited_idx(idx)) < 2000
+                % prüfe, ob wir uns in gleicher Konfiguration befinden
+                if N(end-1) == N(lastvisited_idx(idx)-1)
+                    % entferne damals ausgesuchten Nachbar als Option
+                    neighbor_idxs = neighbor_idxs(neighbor_idxs ~= ...
+                        find(parsed_osm.node.id == N(1, lastvisited_idx(idx)+1, 1)));
+                    num_neighbors = size(neighbor_idxs, 1);
                 end
+                
+                idx = idx - 1;
             end
         end
             
