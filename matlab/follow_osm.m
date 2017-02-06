@@ -172,7 +172,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
-            fprintf('[P: ');
+            fprintf('[P ');
             try
                 tic;
                 [parsed_osm, ~] = parse_openstreetmap(filename);
@@ -184,7 +184,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 break;
             end
 
-            fprintf('[A: ');
+            fprintf('[A ');
             tic;
             % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
             % Matrix
