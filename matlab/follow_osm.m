@@ -26,7 +26,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     E = zeros(1, 0); E(1,1) = 0;
     
     if size(fitness.walkpause, 1) ~= 2
-        fprintf('Array specifiying walkling/pausing times has incorrect size');
+        fprintf('Laufpause-Array falsch dimensioniert.\n');
         return;
     end
     
@@ -100,6 +100,8 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             osm_files = dir(fullfile(map_dir_name, '*.osm'));
             numfiles = size(osm_files, 1);
             
+            fprintf('[%3d]', maps_used);
+            
             if numfiles > 0
                 map_bounds = zeros(numfiles, 4);
                 map_dist = zeros(1, numfiles);
@@ -121,8 +123,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                     filename = fullfile(map_dir_name, osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
                     
-                    fprintf('[%3d] Local map found.\n', maps_used);
-                    fprintf('    > Filename is %s.\n', filename);
+                    fprintf('[L]');
                 end
             end
             
@@ -130,11 +131,13 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             if ~local_map_found
                 bounds = [lat-br_lat lon-br_lon lat+br_lat lon+br_lon];
                 % sende Anfrage an Overpass-API
+                apistr = { 'http://overpass-api.de/api', ...
+                    'http://overpass.osm.rambler.ru/cgi/' };
                 api_name = sprintf(...
-                    '%s/api/interpreter?data=[bbox:%f,%f,%f,%f];(way["highway"];>;);out;', ...
-                    'http://overpass-api.de', bounds);
+                    '%s/interpreter?data=[bbox:%f,%f,%f,%f];(way["highway"];>;);out;', ...
+                    apistr{2}, bounds);
 
-                fprintf('[%3d] Querying API ... ', maps_used);
+                fprintf('[Q ');
                 tic;
                 % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
                 % kurz
@@ -143,52 +146,51 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 try
                     remote_xml = webread(api_name, options);
                 catch ME
-                    fprintf('failed. Aborting calculation.\n');
+                    fprintf('ERROR]\n');
                     errordlg(getReport(ME, 'extended', 'hyperlinks', 'off'), 'Fehler');
+                    close(wbh);
                     [~] = toc;
                     rethrow(ME);
                 end
                 time = toc;
 
-                fprintf('done.                     [%9.6f s]\n', time);
+                fprintf('%9.6f s]', time);
 
                 % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
                 % schreibe xml in die Datei
                 filename = fullfile(map_dir_name, sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    fprintf('%s cannot be opened as a file. Aborting.\n', filename);
+                    fprintf('\n%s Kann nicht geöffnet werden. Breche ab.\n', filename);
                     break;
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
                 
                 clear remote_xml api_name;
-                
-                fprintf('    > Saving to %s.\n', filename);
             end
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
-            fprintf('    * Parsing data ... ');
+            fprintf('[P: ');
             try
                 tic;
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
-                fprintf('done.                     [%9.6f s]\n', time);
+                fprintf(' %9.6f s]', time);
             catch
                 [~] = toc;
-                fprintf('failed.\n');
+                fprintf(' ERROR]\n');
                 break;
             end
 
-            fprintf('    * Creating adjacency matrix ... ');
+            fprintf('[A: ');
             tic;
             % Eigene Function für Adjazenzmatrix für ungerichteten Graphen -> symmetrische
             % Matrix
             adj_matrix = adjacencyMatrix(parsed_osm);
             time = toc;
-            fprintf('done.        [%9.6f s]\n', time);
+            fprintf('%9.6f s]\n', time);
             
             % muss Index neu bestimmen, da sich zugrundeliegende Daten verändert haben
             % diese Methode ist potentiell ungenau
@@ -221,7 +223,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
         % Betrachte zunächst die Fälle, wenn keine, einer oder genau zwei Nachbarn
         % existieren
         if num_neighbors == 0
-            fprintf('Node has no non-dead end neighbors.\n');
+            fprintf('Knoten hat keine Nachbarn, die nicht in Sackgasse enden.\n');
             break;
         elseif num_neighbors == 1
             ist_sackgasse = true;
@@ -325,7 +327,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     
     close(wbh);
     
-    fprintf('\nFinished calculating route.\n');
+    fprintf('\nFertig.\n');
     
     % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der
     % Unendlich-Norm

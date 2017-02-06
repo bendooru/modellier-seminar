@@ -29,7 +29,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     end
     
     if size(fitness.walkpause, 1) ~= 2
-        fprintf('Array specifiying walkling/pausing times has incorrect size');
+        fprintf('Laufpause-Array falsch dimensioniert.\n');
         return;
     end
     
@@ -101,6 +101,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             osm_files = dir(fullfile(map_dir_name, '*.osm'));
             numfiles = size(osm_files, 1);
             
+            fprintf('[%3d]', maps_used);
+            
             if numfiles > 0
                 map_bounds = zeros(numfiles, 4);
                 map_dist = zeros(1, numfiles);
@@ -122,8 +124,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     filename = fullfile(map_dir_name, osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
                     
-                    fprintf('[%3d] Local map found.\n', maps_used);
-                    fprintf('    > Filename is %s.\n', filename);
+                    fprintf('[L]');
                 end
             end
             
@@ -139,11 +140,13 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     'way["natural"="coastline"];', ...
                     'way["waterway"="riverbank"];', ...
                     ');>;);out;'; ];
+                apistr = { 'http://overpass-api.de/api', ...
+                    'http://overpass.osm.rambler.ru/cgi/' };
                 api_name = sprintf(...
-                    '%s/api/interpreter?data=[bbox:%f,%f,%f,%f];%s', ...
-                    'http://overpass-api.de', bounds, api_request);
+                    '%s/interpreter?data=[bbox:%f,%f,%f,%f];%s', ...
+                    apistr{2}, bounds, api_request);
 
-                fprintf('[%3d] Querying API ... ', maps_used);
+                fprintf('[Q ');
                 tic;
                 % größere Anfragen brauchen ggf. länger, Default-Timeout von 5sec ist zu
                 % kurz
@@ -152,40 +155,38 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                 try
                     remote_xml = webread(api_name, options);
                 catch
-                    fprintf('failed. Aborting calculation.\n');
+                    fprintf('ERROR]\n');
                     [~] = toc;
                     break;
                 end
                 time = toc;
 
-                fprintf('done.                     [%9.6f s]\n', time);
+                fprintf('%9.6f s]', time);
 
                 % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
                 % schreibe xml in die Datei
                 filename = fullfile(map_dir_name, sprintf(map_filename_spec, bounds));
                 fid = fopen(filename, 'wt');
                 if fid == -1
-                    error('%s cannot be opened as a file.', filename);
+                    error('%s kann nicht geöffnet werden.', filename);
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
                 
                 clear remote_xml api_name;
-                
-                fprintf('    > Saving to %s.\n', filename);
             end
             
             % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
             % parsen
-            fprintf('    * Parsing data ... ');
+            fprintf('[P ');
             try
                 tic;
                 [parsed_osm, ~] = parse_openstreetmap(filename);
                 time = toc;
-                fprintf('done.                     [%9.6f s]\n', time);
+                fprintf('%9.6f s]\n', time);
             catch
                 [~] = toc;
-                fprintf('empty map.\n');
+                fprintf(' E]');
                 map_nonempty = false;
             end
             
@@ -309,7 +310,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
         plot(X(1, :), X(2, :), 'r', 'LineWidth', 1.5);
     end
     
-    fprintf('Done.\n');
+    fprintf('Fertig.\n');
     
     % Abstand eines Vektors c zum Komplement der Rechtecksfläche gegeben durch bnd in der
     % Unendlich-Norm
