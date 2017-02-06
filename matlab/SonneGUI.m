@@ -32,29 +32,41 @@ function SonneGUI
             'Label', 'PNG-Tiledaten löschen', ...
             'Enable', 'off', ...
             'Separator', 'on', ...
-            'Callback', @(hObj, ~) dirDelFun(hObj, tiledir), ...
+            'Callback', @(hObj, ~) dirDelFcn(hObj, tiledir), ...
             'Tag', 'TileMenu');
         osmmenu = uimenu(mmenu, ...
             'Label', 'OSM-Kartendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(hObj, ~) dirDelFun(hObj, mapdir), ...
+            'Callback', @(hObj, ~) dirDelFcn(hObj, mapdir), ...
             'Tag', 'OsmMenu');
         osmfreemenu = uimenu(mmenu, ...
             'Label', 'OSM-Kartendaten ohne Straßen löschen', ...
             'Enable', 'off', ...
-            'Callback', @(hObj, ~) dirDelFun(hObj, mapfreedir), ...
+            'Callback', @(hObj, ~) dirDelFcn(hObj, mapfreedir), ...
             'Tag', 'OsmFreeMenu');
         hgtmenu = uimenu(mmenu, ...
             'Label', 'HGT-Höhendaten löschen', ...
             'Enable', 'off', ...
-            'Callback', @(hObj, ~) dirDelFun(hObj, hgtdir), ...
+            'Callback', @(hObj, ~) dirDelFcn(hObj, hgtdir), ...
             'Tag', 'HgtMenu');
         
         % Aktiviere Schaltflächen, falls Ordner existieren
-        dirExFun(tiledir, tilemenu);
-        dirExFun(mapdir, osmmenu);
-        dirExFun(mapfreedir, osmfreemenu);
-        dirExFun(hgtdir, hgtmenu);
+        dirExFcn(tiledir, tilemenu);
+        dirExFcn(mapdir, osmmenu);
+        dirExFcn(mapfreedir, osmfreemenu);
+        dirExFcn(hgtdir, hgtmenu);
+        
+        uimenu(mmenu, ...
+            'Label', 'Eigene Beispiele löschen', ...
+            'Separator', 'on', ...
+            'Callback', @exDelFcn);
+        
+        % Menüeintrag zum Beenden des Programms (auch mit Strg-W)
+        uimenu(mmenu, ...
+            'Label', 'Beenden', ...
+            'Accelerator', 'W', ...
+            'Separator', 'on', ...
+            'Callback', @(~, ~) delete(f));
         
         zmenu = uimenu(f, ...
             'Label', 'Zoom-Modus');
@@ -82,7 +94,9 @@ function SonneGUI
             filename = fullfile('beispiele', exmfiles(i).name);
             loadedvar = load(filename, 'str');
             if isfield(loadedvar, 'str')
-                uimenu(loadmenu, 'Label', loadedvar.str, ...
+                uimenu(loadmenu, ...
+                    'Label', loadedvar.str, ...
+                    'UserData', filename, ...
                     'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
             end
         end
@@ -97,13 +111,6 @@ function SonneGUI
             'CallBack', @saveDataFcn, ...
             'Separator', 'on', ...
             'Tag', 'SaveExpMenu');
-        
-        % Menüeintrag zum Beenden des Programms (auch mit Strg-W)
-        uimenu(mmenu, ...
-            'Label', 'Beenden', ...
-            'Accelerator', 'W', ...
-            'Separator', 'on', ...
-            'Callback', @(~, ~) delete(f));
         
         % Hauptbereich
         mainlayout = uiextras.VBox('Parent', f);
@@ -289,9 +296,38 @@ function SonneGUI
         save(filename, 'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');
         
         % füge Beispiel direkt dem Menü hinzu
-        uimenu(ghandles.ExmMenu, 'Label', str, ...
+        uimenu(ghandles.ExmMenu, ...
+            'Label', str, ...
+            'UserData', filename, ...
             'Callback', @(hObj, ~) setExampleFcn(hObj, filename));
+        
         set(hObj, 'Enable', 'off');
+    end
+
+    % Lösche selbst erstellte Beispiele
+    function exDelFcn(hObj, ~)
+        ghandles = guihandles(hObj);
+        
+        % selbst erstelle Beispiele haben beispiel-Präfix
+        eigeneBsp = dir(fullfile('beispiele', 'beispiel*'));
+        
+        % Zu löschende Dateien
+        fnames = fullfile('beispiele', {eigeneBsp.name});
+        
+        % Liste aller Beispieldateien
+        bspFnames = {ghandles.ExmMenu.Children.UserData};
+        
+        % finde Indizes der zu löschenden Einträge
+        [~, ~, menuIdx] = intersect(fnames, bspFnames);
+        
+        fnamestr = sprintf(' - %s\n', fnames{:});
+
+        button = questdlg(sprintf('Folgende Dateien wirklich löschen?\n%s', fnamestr), ...
+            'Dateien löschen?', 'Ja', 'Nein', 'Nein');
+        if strcmp(button, 'Ja')
+            delete(ghandles.ExmMenu.Children(menuIdx));
+            delete(fnames{:});
+        end
     end
 
     function manuellCheckFcn(hObj, ~)
@@ -331,12 +367,14 @@ function SonneGUI
         
         if any(isnan([[tag monat speed], coord])) || monat < 1 || monat > 12 || ...
                 tag < 1 || tag > monate(monat) || size(fitness.walkpause, 1) ~= 2
+            % Irgendeine Eingabe passt nicht
             errordlg('Invalide Eingaben');
             
             set(hObj, 'Enable', 'on');
             return
         end
         
+        % Prüfe, ob Koordinaten ausgewählt werden müssen
         if get(ghandles.KoordManuellCheckB, 'Value') == 0
             % bei Herunterladen von Kacheln kann es zu Netzwerkfehlern kommen
             % fange ab und stoppe Ausführung
@@ -413,10 +451,10 @@ function SonneGUI
         hold(ghandles.MainAx, 'off');
         
         % Aktiviere Schaltflächen, falls Ordner existieren
-        dirExFun(tiledir, ghandles.TileMenu);
-        dirExFun(mapdir, ghandles.OsmMenu);
-        dirExFun(mapfreedir, ghandles.OsmFreeMenu);
-        dirExFun(hgtdir, ghandles.HgtMenu);
+        dirExFcn(tiledir, ghandles.TileMenu);
+        dirExFcn(mapdir, ghandles.OsmMenu);
+        dirExFcn(mapfreedir, ghandles.OsmFreeMenu);
+        dirExFcn(hgtdir, ghandles.HgtMenu);
         
         % nach Berechnung Los-Knopf wieder freigeben
         set([hObj, ghandles.ZoomStartMenu], 'Enable', 'on');
@@ -620,7 +658,7 @@ function SonneGUI
     end
     
     % Funktion für TMP-Datei-Löschmenü
-    function dirExFun(dir, hObj)
+    function dirExFcn(dir, hObj)
         if isdir(dir)
             set(hObj, 'Enable', 'on');
         else
@@ -629,7 +667,7 @@ function SonneGUI
     end
 
     % Ordner-Lösch-Funktion mit Bestätigungsdialog
-    function dirDelFun(hObj, dir)
+    function dirDelFcn(hObj, dir)
         if isdir(dir)
             p = pwd;
             button = questdlg(sprintf('Ordner "%s/%s" wirklich löschen?', p, dir), ...
@@ -640,6 +678,6 @@ function SonneGUI
         end
         
         % Aktualisiere Schaltflächen-Status
-        dirExFun(dir, hObj);
+        dirExFcn(dir, hObj);
     end
 end
