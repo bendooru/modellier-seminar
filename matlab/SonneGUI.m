@@ -201,16 +201,22 @@ function SonneGUI
 
     function clearExampleFcn(hObj, ~)
         ghandles = guihandles(hObj);
+        
         handles = [ghandles.TagEdit, ghandles.MonatEdit, ghandles.LaufEdit, ...
             ghandles.LaufPauseEdit, ghandles.KoordManuellCheckB, ...
             ghandles.LonEdit, ghandles.LatEdit];
         set(handles, 'Enable', 'on');
         
+        set(ghandles.ExmMenu.Children, 'Checked', 'off');
         set(hObj, 'Enable', 'off');
     end
 
     function setExampleFcn(hObj, fname)
         ghandles = guihandles(hObj);
+        
+        % versehe jetziges Beispiel mit Auswahlhaken
+        set(ghandles.ExmMenu.Children, 'Checked', 'off');
+        set(hObj, 'Checked', 'on');
         
         % lädt Variablen str, coord, tag, monat, fitness, X, T
         loadedvar = load(fname);
