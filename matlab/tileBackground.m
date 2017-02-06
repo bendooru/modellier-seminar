@@ -35,18 +35,20 @@ function tileBackground(xrange, yrange, ax)
     
     % Fange (Netzwerk-)Fehler ab
     try
+        fprintf('Tiles: ');
         for xx=xmin:xmax
             for yy=ymin:ymax
                 TILE = gettile(xx, yy, zlevel);
 
                 image('XData', cornerLon((xx:xx+1)-xmin+1), ...
-                    'YData', cornerLat((yy:yy+1)-ymin+1), ...
-                    'CData', TILE, 'Parent', ax);
+                      'YData', cornerLat((yy:yy+1)-ymin+1), ...
+                      'CData', TILE, 'Parent', ax);
 
                 karten = karten + 1;
                 waitbar(karten/karten_max, wb);
             end
         end
+        fprintf('\n');
     catch ME
         errordlg(getReport(ME, 'extended', 'hyperlinks', 'off'), 'Fehler');
         close(wb);
@@ -76,16 +78,15 @@ function tileBackground(xrange, yrange, ax)
 
     function tileimg = gettile(x, y, zlevel)
         tilename = fullfile(tiledir, sprintf('%d-%d-%d.png', zlevel, x, y));
-        fprintf(' * Tile %s:', tilename);
         
         if ~exist(tilename, 'file')
             subdom = 'abc';
             websave(tilename, sprintf(...
                 'http://%c.tile.openstreetmap.org/%d/%d/%d.png', ...
                 subdom(randi(3, 1)), zlevel, x, y));
-            fprintf(' downloaded.\n');
+            fprintf('F');
         else
-            fprintf(' found.\n');
+            fprintf('l');
         end
         
         % für Benutzung von image anpassen
