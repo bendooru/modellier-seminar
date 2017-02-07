@@ -49,7 +49,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     maps_used = 0;
     
     % Format für Karten-Dateinamen
-    map_filename_spec = 'map-%f_%f_%f_%f.osm';
+    map_filename_spec = 'map-%f_%f_%f_%f.mat';
     map_dir_name = 'maps';
     
     % stelle sicher dass Verzeichnis existiert
@@ -97,7 +97,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             local_map_found = false;
             
             % suche nach .osm Dateien im Unterverzeichnis maps
-            osm_files = dir(fullfile(map_dir_name, '*.osm'));
+            osm_files = dir(fullfile(map_dir_name, '*.mat'));
             numfiles = size(osm_files, 1);
             
             fprintf('[%3d]', maps_used);
@@ -122,6 +122,9 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                     local_map_found = true;
                     filename = fullfile(map_dir_name, osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
+                    
+                    loadedvar = load(filename, 'parsed_osm');
+                    parsed_osm = loadedvar.parsed_osm;
                     
                     fprintf('[L]');
                 end
@@ -159,29 +162,35 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                 % Generiere (weitestgehend) eindeutigen Dateinamen für Straßendaten und
                 % schreibe xml in die Datei
                 filename = fullfile(map_dir_name, sprintf(map_filename_spec, bounds));
-                fid = fopen(filename, 'wt');
+                
+                osmname = fullfile(map_dir_name, 'temp.osm');
+                fid = fopen(osmname, 'wt');
                 if fid == -1
-                    fprintf('\n%s Kann nicht geöffnet werden. Breche ab.\n', filename);
+                    fprintf('\n%s Kann nicht geöffnet werden. Breche ab.\n', osmname);
                     break;
                 end
                 fprintf(fid, '%s', remote_xml);
                 fclose(fid);
                 
                 clear remote_xml api_name;
-            end
             
-            % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
-            % parsen
-            fprintf('[P ');
-            try
-                tic;
-                [parsed_osm, ~] = parse_openstreetmap(filename);
-                time = toc;
-                fprintf(' %9.6f s]', time);
-            catch
-                [~] = toc;
-                fprintf(' ERROR]\n');
-                break;
+                % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
+                % parsen
+                fprintf('[P ');
+                try
+                    tic;
+                    [parsed_osm, ~] = parse_openstreetmap(osmname);
+                    time = toc;
+                    fprintf(' %9.6f s]', time);
+                catch
+                    [~] = toc;
+                    fprintf(' ERROR]\n');
+                    delete(osmname);
+                    break;
+                end
+                
+                delete(osmname);
+                save(filename, 'parsed_osm');
             end
 
             fprintf('[A ');
@@ -241,11 +250,10 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
             neighbor_idxs = neighbor_idxs(neighbor_idxs ~= node_idx_prev);
             num_neighbors = size(neighbor_idxs, 1);
             
-            remember_intersections = 3;
+            %remember_intersections = 3;
             
             % Zykelprävention
-            lastvisited_idx = find(N(1, 1:end-1) == N(1, end), ...
-                remember_intersections, 'last');
+            lastvisited_idx = find(N(1, 1:end-1) == N(1, end));
             idx = numel(lastvisited_idx);
             
             % prüfe, ob genug Distanz seit letztem Besuch zurückgelegt wurde
