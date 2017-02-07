@@ -4,6 +4,8 @@
 lon = 138.774444;
 lat =  36.684989;
 
+% lon=7.240602; lat=49.752821;
+
 % lon = 10; lat = 45.5;
 
 speed = 90;
@@ -18,5 +20,11 @@ setenv('MATLAB_SUNPOSITION_FUN', 'exact');
 
 dist = norm(lonlat2vec(S(1,end), S(2, end), 6371000) - ...
     lonlat2vec(SC(1, end), SC(2, end), 6371000));
+
+f=figure; hold on;
+plot(S(1, :), S(2, :));
+plot(SC(1, :), SC(2, :));
+legend('Eigenes Modell', 'Exaktes Modell');
+hold off;
 
 fprintf('Enpunkte haben Distanz %f m\n', dist);
