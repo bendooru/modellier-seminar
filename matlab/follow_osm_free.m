@@ -242,28 +242,22 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                         parsed_osm.node.id == way{1}(1, ndi));
                 end
                 
-                for ndi = 1:waysize
+                for ndi = 2:waysize
                     % Prüfe mit linearer Algebra, ob wir einen way übertreten
-                    if ndi == 1
-                        ndi_prev = waysize;
-                    else
-                        ndi_prev = ndi - 1;
-                    end
-                    
-                    A = [coord-X(:,step-1), wayxy(:,ndi_prev)-wayxy(:,ndi)];
+                    A = [coord-X(:,step-1), wayxy(:,ndi-1)-wayxy(:,ndi)];
                     
                     if rcond(A) < 1e-22
                         % Laufen nahezu parallel zu betrachtetem Wegsegment
                         continue;
                     end
                     
-                    b = wayxy(:,ndi_prev) - X(:,step-1);
+                    b = wayxy(:,ndi-1) - X(:,step-1);
                     sol = A\b;
                     
                     % Kollision liegt auf dem Laufweg
                     if all(sol >= 0) && all(sol <= 1) && sol(1) < collision
                         collision = sol(1);
-                        collision_dir = wayxy(:, ndi) - wayxy(:, ndi_prev);
+                        collision_dir = wayxy(:, ndi) - wayxy(:, ndi-1);
                     end
                 end
             end
