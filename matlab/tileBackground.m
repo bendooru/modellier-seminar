@@ -76,7 +76,11 @@ function tileBackground(xrange, yrange, ax)
         LAT = rad2deg(atan(sinh(pi - (2*pi).*(Y./N))));
     end
 
-    function tileimg = gettile(x, y, zlevel)
+    function tileimg = gettile(x, y, zlevel, tries)
+        if nargin < 4
+            tries = 0;
+        end
+        
         tilename = fullfile(tiledir, sprintf('%d-%d-%d.png', zlevel, x, y));
         
         if ~exist(tilename, 'file')
@@ -90,9 +94,18 @@ function tileBackground(xrange, yrange, ax)
         end
         
         % für Benutzung von image anpassen
-        [tileimg, tmap] = imread(tilename);
-        if ~isempty(tmap)
-            tileimg = ind2rgb(tileimg, tmap);
+        try
+            [tileimg, tmap] = imread(tilename);
+            if ~isempty(tmap)
+                tileimg = ind2rgb(tileimg, tmap);
+            end
+        catch ME
+            if tries > 10
+                rethrow(ME);
+            end
+            fprintf('e');
+            delete(tilename);
+            tileimg = gettile(x, y, zlevel, tries+1);
         end
     end
     
