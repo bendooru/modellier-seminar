@@ -371,7 +371,7 @@ function SonneGUI
         % Ab hier: teste auf valide Eingabe
         monate = [31 28 31 30 31 30 31 31 30 31 30 31];
         
-        if any(isnan([[tag monat speed], coord])) || monat < 1 || monat > 12 || ...
+        if any(isnan([tag, monat, speed, coord])) || monat < 1 || monat > 12 || ...
                 tag < 1 || tag > monate(monat) || size(fitness.walkpause, 1) ~= 2
             % Irgendeine Eingabe passt nicht
             errordlg('Invalide Eingaben');
@@ -530,7 +530,12 @@ function SonneGUI
                 delete(ax.Children(strcmpi(get(ax.Children, 'Type'), 'image')));
                 
                 % zeichne Hintergrund mit neuen Koordinatengrenzen neu
-                tileBackground(xRange, yRange, ax);
+                try
+                    tileBackground(xRange, yRange, ax);
+                catch
+                    break;
+                end
+                    
                 
                 imgVec = strcmpi(get(ax.Children, 'Type'), 'image');
                 % Children von Ax umordnen, damit Route über Kacheln liegt
