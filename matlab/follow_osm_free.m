@@ -67,6 +67,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     
     wbh = waitbar(0, 'Berechne Route ...');
     
+    ausgewichen = false;
+    
     % Abbruchbedingung: für 24h gelaufen oder Sonne untergegangen
     while visible && t < t_end
         % interpretiere die Laufzeit-Pause-Liste als zyklisch
@@ -196,7 +198,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     save(filename, 'parsed_osm');
                 catch
                     [~] = toc;
-                    fprintf(' e]\n');
+                    fprintf('e]\n');
                     save(filename, 'maps_used');
                     map_nonempty = false;
                 end
@@ -228,9 +230,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
         coord = rad2deg(coord);
         
         if ausweichen
-            if dot(collision_dir, coord - X(:, step-1)) < 0
-                collision_dir = -collision_dir;
-            end
+            collision_dir = (-1)^(ausgewichen + ...
+                (dot(collision_dir, coord - X(:, step-1)) < 0))*collision_dir;
             
             coordTemp = X(:, step-1) + collision_dir;
             dist = norm(p_prev - lonlat2vec(coordTemp(1), coordTemp(2), earth_radius));
@@ -242,6 +243,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
         else
             distance = speed*delta_t;
         end
+        
+        ausgewichen = ausweichen;
         
         if map_nonempty
             % überprüfe auf Kollisionen
@@ -275,6 +278,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     end
                 end
             end
+            
             if collision <= 1
                 %coeff = norm(lonlat2vec(coord(1), coord(2), earth_radius) ...
                 %   -lonlat2vec(X(1, step-1), X(2, step-1), earth_radius)) * collision;
