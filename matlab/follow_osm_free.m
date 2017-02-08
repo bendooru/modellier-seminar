@@ -124,10 +124,14 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     filename = fullfile(map_dir_name, osm_files(dist_idx).name);
                     bounds = map_bounds(dist_idx, :);
                     
-                    loadedvar = load(filename, 'parsed_osm');
-                    parsed_osm = loadedvar.parsed_osm;
+                    loadedvar = load(filename);
+                    if isfield(loadedvar, 'parsed_osm')
+                        parsed_osm = loadedvar.parsed_osm;
+                    else
+                        map_nonempty = false;
+                    end
                     
-                    fprintf('[L]');
+                    fprintf('[L]\n');
                 end
             end
             
@@ -147,7 +151,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     'http://overpass.osm.rambler.ru/cgi/' };
                 api_name = sprintf(...
                     '%s/interpreter?data=[bbox:%f,%f,%f,%f];%s', ...
-                    apistr{2}, bounds, api_request);
+                    apistr{1}, bounds, api_request);
 
                 fprintf('[Q ');
                 tic;
@@ -188,30 +192,16 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
                     tic;
                     [parsed_osm, ~] = parse_openstreetmap(osmname);
                     time = toc;
-                    fprintf(' %9.6f s]', time);
+                    fprintf(' %9.6f s]\n', time);
+                    save(filename, 'parsed_osm');
                 catch
                     [~] = toc;
-                    fprintf(' ERROR]\n');
-                    delete(osmname);
-                    break;
+                    fprintf(' e]\n');
+                    save(filename, 'maps_used');
+                    map_nonempty = false;
                 end
                 
                 delete(osmname);
-                save(filename, 'parsed_osm');
-            end
-            
-            % benutze openstreetmapfunctions, um OSM-XML in Matlab-Struct zu
-            % parsen
-            fprintf('[P ');
-            try
-                tic;
-                [parsed_osm, ~] = parse_openstreetmap(filename);
-                time = toc;
-                fprintf('%9.6f s]\n', time);
-            catch
-                [~] = toc;
-                fprintf(' E]');
-                map_nonempty = false;
             end
             
             % Kümmern uns um Höhendaten, falls gewünscht
@@ -311,10 +301,14 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
         end
         
         % Falls Bewegung zu wenig Zeit benötigt, lass delta_t Minuten verstreichen
-        if speed < 1 || distance/speed < 0.1*delta_t
+        if isnan(speed) || speed < 1 || distance/speed < 0.1*delta_t
             t = t + delta_t;
         else
             t = t + distance/speed;
+        end
+        
+        if isnan(t)
+            disp('!');
         end
         
         X(:, step) = coord;
