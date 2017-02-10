@@ -19,7 +19,7 @@ Repository zur Speicherung relevanter Dateien:
     * `'TimePlot'`: Plotte zusätzlich zurückgelegte Distanz nach Zeit
     * Ein Aufruf der Form `osm_gui(_, 'Coord', [lon lat])` überspringt die grafische
       Koordinatenwahl
- * `Gui` oder `SonneGUI` stellen vollständife GUIs dar (letzteres braucht die GUI Layout Toolbox
+ * `Gui` oder `SonneGUI` stellen vollständige GUIs dar (letzteres braucht die GUI Layout Toolbox
  * `.hgt`-Dateien werden nun im Unterverzeichnis `hgt` gespeichert, um den Hauptorder
    nicht zuzumüllen. Das `readhgt`-Skript scheint Probleme beim Verbinden über http zu
    haben.
@@ -27,3 +27,5 @@ Repository zur Speicherung relevanter Dateien:
 * `zwischenber1` enthält Dateien zum ersten Zwischenbericht.
 * `zwischenber2` enthält Dateien zum zweiten Zwischenbericht.
 * `zwischenber3` enthält Dateien zum dritten Zwischenbericht.
+* `abschlusspräs`: Abschlusspräsentation.
+* `abschlussber`: Abschlussbericht über das Projekt.
