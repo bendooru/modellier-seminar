@@ -118,14 +118,37 @@ oder -wandern.
 Dabei müssen wir die realen Gegebenheiten unserer Umwelt beachten:
 Behinderungen jeder Art wie Wände, Zäune, Flüsse und ähnliches müssen erkannt und wenn
 möglich umgangen werden.
-
 Zusätzlich wollen wir zur realistischen Beschreibung einer ganztägigen Wanderung auch
 Laufpausen erlauben und müssen die entsprechenden Auswirkungen auf den Sonnenstand
 betrachten.
 
+% Bedarf sicherlich noch einiger Überarbeitung
 \section{Übersicht}
+Unsere Strategie bei der Modellierung dieser Problemstellung war es, mit einem möglichst
+einfachen, aber nicht zu unrealistischen Modell zu beginnen und dieses anschließend
+sukzessive zu erweitern und zu spezialisieren.
 
-Dies ist ein Beispielsatz.
+Als Ausgangspunkt wählten wir ein vereinfachtes Umlaufmodell, bei welchem sich die Erde
+auf einer perfekten Kreisbahn um die Sonne bewegt. Weiterhin nahmen wir an, dass die Erde
+eine perfekte Kugel ist. Dies lieferte dann bereits eine gute Intuition für die
+entstehende Laufroute. Anschließend erweiterten wir das Modell um Höhendaten, um
+steigungsbedingte Laufgeschwindigkeiten zu ermöglichen. Dabei verwendeten wir die frei
+verfügbaren Daten der SRTM.
+
+Um nun Hindernisse und dergleichen modellieren und umgehen zu können, brauchten wir
+entsprechende Daten. Der freien Zugänglichkeit wegen entschieden wir uns an dieser Stelle
+für OpenStreetMap. Da der sofortige Übergang zu einem kollisionsbasierten Modell mit
+freier Beweglichkeit zunächst zu schwer erschien, entwarfen wir ein Fortbewegungsmodell
+auf Grundlage von Straßen und Wegen, was wiederum erforderte, sich mit Sackgassen und
+Rundwegen zu beschäftigen.
+
+Als letzten Schritt in unserer Modellierung haben wir uns dann an der
+\enquote{Querfeldein}-Variante versucht: Wir wollen uns auch außerhalb von Straßen bewegen
+können und müssen dafür Hindernisse erkennen und umgehen. Letztendlich ist das Umgehen in
+unserem Modell nur relativ primitiv umgesetzt, da es an Zeit mangelte.
+
+Abschließend haben wir unsere Ergebnisse in einer benutzerfreundlichen grafischen
+Oberfläche zugänglich gemacht.
 
 \section{Ein einfaches Sonnenmodell}
 
@@ -135,11 +158,11 @@ Dies ist ein Beispielsatz.
 
 Dies ist ein Beispielsatz.
 
-\section{Realitätsnahe Daten: OpenStreetMap}
+\section{Realitätsbasierte Daten: OpenStreetMap}
 
 Dies ist ein Beispielsatz.
 
-\section{Bewegung auf Grundlage von Straßen}
+\section{Bewegung auf Grundlage von Straßen und Wegen}
 
 Dies ist ein Beispielsatz.
 
@@ -148,6 +171,10 @@ Dies ist ein Beispielsatz.
 Dies ist ein Beispielsatz.
 
 \section{Integration der Modelle in eine grafische Oberfläche}
+
+Dies ist ein Beispielsatz.
+
+\section{Ausblick und weitere mögliche Fragestellungen}
 
 Dies ist ein Beispielsatz.
 
