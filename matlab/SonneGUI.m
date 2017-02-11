@@ -288,7 +288,7 @@ function SonneGUI
         
         str = sprintf('%s [%.6f, %.6f] (%d/%d)\n', titstr{1}, coord, tag, monat);
         
-        n = size(dir('beispiele'), 1);
+        n = size(dir(fullfile('beispiele', 'beispiel-*.mat')), 1);
         filename = sprintf('beispiel-%04d.mat', n+1);
         
         while size(dir(fullfile('beispiele', filename)), 1) > 0
@@ -442,7 +442,11 @@ function SonneGUI
         % Extrema
         xyRange = minmax(data.XData) + [-0.001, 0.001; -0.001, 0.001];
 
-        tileBackground(xyRange(1, :), xyRange(2, :), ghandles.MainAx);
+        try
+            tileBackground(xyRange(1, :), xyRange(2, :), ghandles.MainAx);
+        catch
+            %
+        end
         
         % normaler, sofortiger Plot
         h = plot(ghandles.MainAx, ...
@@ -523,8 +527,8 @@ function SonneGUI
             
                 % setze gewählten Punkt als neuen Mittelpunkt
                 % halbiere oder verdopple Breite und Höhe je nach Maustaste
-                xRange = zoomCenter(1) + (range(ax.XLim)*2^(-1-zoom)) .* [-1, 1];
-                yRange = zoomCenter(2) + (range(ax.YLim)*2^(-1-zoom)) .* [-1, 1];
+                xRange = zoomCenter(1) + (range(ax.XLim)*2.05^(-1-zoom)) .* [-1, 1];
+                yRange = zoomCenter(2) + (range(ax.YLim)*2.05^(-1-zoom)) .* [-1, 1];
                 
                 % Lösche alle Children von ax, die vom Typ Image sind
                 delete(ax.Children(strcmpi(get(ax.Children, 'Type'), 'image')));

@@ -138,7 +138,7 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
                     'http://overpass.osm.rambler.ru/cgi/' };
                 api_name = sprintf(...
                     '%s/interpreter?data=[bbox:%f,%f,%f,%f];(way["highway"];>;);out;', ...
-                    apistr{2}, bounds);
+                    apistr{1}, bounds);
 
                 fprintf('[Q ');
                 tic;
