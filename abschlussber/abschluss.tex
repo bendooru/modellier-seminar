@@ -8,12 +8,18 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
+% \enquote{..} für automatische Anführungszeichen
 \usepackage[autostyle=true]{csquotes}
+% zusätzliche Optionen für Aufzählumgebungen itemize, enumerate, ..
 \usepackage{enumitem}
+% mathematische Symbole und Umgebungen
 \usepackage{mathtools, amsfonts, amssymb, amsthm}
+
+% Fonts
 \usepackage{lmodern}
 \usepackage{dsfont}
 
+% Aussehen von Figuren
 \usepackage[%
     font=footnotesize,
     margin=0.2em,
@@ -21,6 +27,7 @@
     format=plain,
     labelsep=endash
 ]{caption}
+% Ermöglicht Anordnen von Unterfiguren
 \usepackage[%
     font=footnotesize,
     margin=0.2em,
@@ -36,7 +43,7 @@
 \numberwithin{equation}{section}
 \numberwithin{table}{section}
 
-% Mengen
+% Mengen, wahrscheinlich nicht notwendig
 \newcommand*\setZ{\mathds{Z}}
 \newcommand*\setR{\mathds{R}}
 \newcommand*\setN{\mathds{N}}
@@ -50,11 +57,11 @@
 \newcommand*\vecd[3]{\begin{pmatrix} #1 \\ #2 \\ #3 \end{pmatrix}}
 \newcommand*\vecf[4]{\begin{pmatrix} #1 \\ #2 \\ #3 \\ #4 \end{pmatrix}}
 \newcommand*\matDD[4]{\begin{pmatrix} #1 & #2 \\ #3 & #4 \end{pmatrix}}
-\newcommand*\diff{\mathrm d}
 
+% Titel etc.
 \title{Immer der Sonn' entgegen}
 \subtitle{Proseminar: Mathematische Modellierung}
-\author{Dominik Bendle, Melissa Hasel, Thomas Hofmann}
+\author{Dominik Bendle \and Melissa Hasel \and Thomas Hofmann}
 \date{Wintersemester 2016/17}
 
 \begin{document}
@@ -64,10 +71,11 @@
     \centering
     \vfill
     % hier passendes Bild einfügen
-    \includegraphics[width=0.6\textwidth]{images/man_looking_at_sun.jpg}
+    \includegraphics[width=0.7\textwidth]{images/man_looking_at_sun.jpg}
     \vfill
 \end{titlepage}
 
+% zweite Seite für Inhalts- und Abbildungsverzeichnis
 \tableofcontents
 \vfill
 \listoffigures
@@ -102,11 +110,51 @@ Wir beschäftigen uns mit der in folgender Erzählung aufkommender Problemstellu
     \textit{Eine Unterbrechung kommt selbstverständlich überhaupt nicht infrage. Und wenn
     uns ein ganzer Harem verlockend in den Weg tänzelte!}
 }
-
 Konkret wollen wir also bei gegebenem Startpunkt und -datum bestimmen, welche Route
 entsteht, wenn wir von Sonnenauf- bis Sonnenuntergang immer der Sonne  hinterherlaufen
 oder -wandern.
 
+% Dieser Teil könnte in den nächsten Abschnitt verschoben werden
+Dabei müssen wir die realen Gegebenheiten unserer Umwelt beachten:
+Behinderungen jeder Art wie Wände, Zäune, Flüsse und ähnliches müssen erkannt und wenn
+möglich umgangen werden.
+
+Zusätzlich wollen wir zur realistischen Beschreibung einer ganztägigen Wanderung auch
+Laufpausen erlauben und müssen die entsprechenden Auswirkungen auf den Sonnenstand
+betrachten.
+
 \section{Übersicht}
+
+Dies ist ein Beispielsatz.
+
+\section{Ein einfaches Sonnenmodell}
+
+Dies ist ein Beispielsatz.
+
+\section{Erweiterung um Höhendaten}
+
+Dies ist ein Beispielsatz.
+
+\section{Realitätsnahe Daten: OpenStreetMap}
+
+Dies ist ein Beispielsatz.
+
+\section{Bewegung auf Grundlage von Straßen}
+
+Dies ist ein Beispielsatz.
+
+\section{Verallgemeinerung auf straßenloses Modell}
+
+Dies ist ein Beispielsatz.
+
+\section{Integration der Modelle in eine grafische Oberfläche}
+
+Dies ist ein Beispielsatz.
+
+% Sollen wir das in dieses Dokument packen?
+\appendix
+\section{Verwendung unserer Skripte und Funktionen}
+
+Dies ist ein Beispielsatz.
 
 \end{document}
