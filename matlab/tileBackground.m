@@ -1,7 +1,8 @@
 function tileBackground(xrange, yrange, ax)
-    ax.XLim = xrange; ax.YLim = yrange;
+    ax.XLim = xrange; ax.YLim = fromMercator(yrange);
     %drawnow;
-    maxLat = rad2deg(atan(sinh(pi)));
+    %maxLat = rad2deg(atan(sinh(pi)));
+    maxLat = pi;
 
     tiledir = 'tiles';
     if ~isdir(tiledir)
@@ -11,18 +12,22 @@ function tileBackground(xrange, yrange, ax)
     % Errechne angemessenes Zoom-Level aus Plot-Größe
     oldunits = ax.Units;
     ax.Units = 'pixels';
+    pixelwidth  = ax.Position(3);
     pixelheight = ax.Position(4);
     ax.Units = oldunits;
 
-    zlevel_ur = log2((pixelheight * maxLat)/range(yrange)) - 7;
+    % wählere kleineres ZoomLevel berechnet nach x- und y-Längen
+    zlevel_ur = min(log2((pixelheight * maxLat)/range(fromMercator(yrange))) - 7, ...
+        log2((pixelwidth * 180)/range(xrange)) - 7);
     zlevel = arrBounds(floor(zlevel_ur), 0, 16);
 
     % Vergrößere Nachträglich Plotbereich, um Tile pixelgetreu darzustellen
     meanx = mean(xrange);
     xrange = meanx + 2^(zlevel_ur-zlevel).*(xrange-meanx);
     meany = mean(yrange);
-    yrange = meany + 2^(zlevel_ur-zlevel).*(yrange-meany);
-    ax.XLim = xrange; ax.YLim = yrange;
+    yrange = arrBounds(meany + 2^(zlevel_ur-zlevel).*(yrange-meany), ...
+        toMercator(-pi), toMercator(pi));
+    ax.XLim = xrange; ax.YLim = fromMercator(yrange);
 
     [xmax, ymax] = coord2tile(xrange(2), yrange(1), zlevel);
     [xmin, ymin] = coord2tile(xrange(1), yrange(2), zlevel);
@@ -41,7 +46,7 @@ function tileBackground(xrange, yrange, ax)
                 TILE = gettile(xx, yy, zlevel);
 
                 image('XData', cornerLon((xx:xx+1)-xmin+1), ...
-                      'YData', cornerLat((yy:yy+1)-ymin+1), ...
+                      'YData', fromMercator(cornerLat((yy:yy+1)-ymin+1)), ...
                       'CData', TILE, 'Parent', ax);
 
                 karten = karten + 1;
@@ -55,6 +60,9 @@ function tileBackground(xrange, yrange, ax)
         rethrow(ME)
     end
     
+    set(ax, 'YTickLabel', cellstr(num2str(toMercator(...
+            get(ax, 'YTick')'))));
+    
     close(wb);
 
     % Berechnung der Tile-Daten (sie OSM-Wiki)
@@ -66,7 +74,7 @@ function tileBackground(xrange, yrange, ax)
         x = floor((LON+180)./360 .* N);
         x = arrBounds(x, 0, N-1);
         
-        y = floor((1-asinh(tan(deg2rad(arrBounds(LAT, -maxLat, maxLat))))./pi).*(N/2));
+        y = floor((1-arrBounds(asinh(tan(deg2rad(LAT))), -maxLat, maxLat)./pi).*(N/2));
         y = arrBounds(y, 0, N-1);
     end
 
@@ -112,5 +120,13 @@ function tileBackground(xrange, yrange, ax)
     % beschränke Elemente in Array
     function arr = arrBounds(arr, amin, amax)
         arr = min(max(arr, amin), amax);
+    end
+
+    function LAT = toMercator(Y)
+        LAT = rad2deg(atan(sinh(Y)));
+    end
+
+    function Y = fromMercator(LAT)
+        Y = asinh(tan(deg2rad(LAT)));
     end
 end

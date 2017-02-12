@@ -3,7 +3,8 @@ function SonneGUI
     % ACHTUNG! Basiert auf Gui Layout Toolbox
 
     %% Hauptteil
-    maxLat = rad2deg(atan(sinh(pi)));
+    %maxLat = rad2deg(atan(sinh(pi)));
+    maxLat = pi;
     tiledir = 'tiles';
     mapdir  = 'maps';
     mapfreedir = 'maps-free';
@@ -123,6 +124,9 @@ function SonneGUI
         title(ax, 'Kartenbereich');
         xlabel(ax, 'Longitude (°)');
         ylabel(ax, 'Latitude (°)');
+        
+        set(ax, 'YTickLabel', cellstr(num2str(toMercator(...
+            get(ax, 'YTick')'))));
         
         % unterer Teil der GUI
         controlpanel = uiextras.Panel('Parent', mainlayout, ...
@@ -386,7 +390,7 @@ function SonneGUI
             % fange ab und stoppe Ausführung
             try
                 coord = chooseStartingPoint(ghandles.MainAx);
-            catch 
+            catch
                 set(hObj, 'Enable', 'on');
                 return
             end
@@ -450,7 +454,7 @@ function SonneGUI
         
         % normaler, sofortiger Plot
         h = plot(ghandles.MainAx, ...
-            data.XData(1, :), data.XData(2, :), '-r', 'LineWidth', 1.5);
+            data.XData(1, :), fromMercator(data.XData(2, :)), '-r', 'LineWidth', 1.5);
 
         data = guidata(hObj);
         data.RouteLine = h;
@@ -535,7 +539,7 @@ function SonneGUI
                 
                 % zeichne Hintergrund mit neuen Koordinatengrenzen neu
                 try
-                    tileBackground(xRange, yRange, ax);
+                    tileBackground(xRange, toMercator(yRange), ax);
                 catch
                     break;
                 end
@@ -577,12 +581,12 @@ function SonneGUI
         data = guidata(ax);
         
         h = animatedline('Color', 'r', 'LineWidth', 1.5);
-        p = plot(ax, X(1, 1), X(2, 1), 'o', 'MarkerFaceColor', 'red');
+        p = plot(ax, X(1, 1), fromMercator(X(2, 1)), 'o', 'MarkerFaceColor', 'red');
         
         for i = 1:size(X, 2)
-            addpoints(h, X(1, i), X(2, i));
+            addpoints(h, X(1, i), fromMercator(X(2, i)));
             p.XData = X(1, i);
-            p.YData = X(2, i);
+            p.YData = fromMercator(X(2, i));
             runtime = T(1, i) - T(1, 1);
             if runtime > 59
                 timestr = sprintf('%d h %.1f min', floor(runtime/60), mod(runtime, 60));
@@ -609,6 +613,14 @@ function SonneGUI
         arr = min(max(arr, amin), amax);
     end
 
+    function LAT = toMercator(Y)
+        LAT = rad2deg(atan(sinh(Y)));
+    end
+
+    function Y = fromMercator(LAT)
+        Y = asinh(tan(deg2rad(LAT)));
+    end
+
     % Bestimme Startpunkt interaktiv
     function coord = chooseStartingPoint(ax)
         zoomstep = 1;
@@ -627,7 +639,7 @@ function SonneGUI
             cla(ax);
 
             xRange = arrBounds(coord(1) + widthhv, -180, 180);
-            yRange = arrBounds(coord(2) + heighthv, -maxLat, maxLat);
+            yRange = toMercator(arrBounds(coord(2) + heighthv, -maxLat, maxLat));
 
             hold(ax, 'on');
             tileBackground(xRange, yRange, ax);
@@ -660,6 +672,7 @@ function SonneGUI
                 zoomstep = zoomstep + 1;
             end
         end
+        coord(2) = toMercator(coord(2));
     end
 
     % Toggle Checkbox-Menüeintrag
