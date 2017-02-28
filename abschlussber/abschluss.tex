@@ -52,7 +52,7 @@
 \newcommand*\setN{\mathds{N}}
 \newcommand*\setK{\mathds{K}}
 
-% nummeriere besimmte Gleichung
+% nummeriere besimmte Gleichungen
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
 % Matrizen, Vektoren
@@ -187,8 +187,29 @@ Dies ist ein Beispielsatz.
 % Sollen wir das in dieses Dokument packen?
 \appendix
 \section{Verwendung unserer Skripte und Funktionen}
+In diesem Anhang wollen wir noch alle von uns geschriebenen Funktionen und Skripte
+auflisten und kurz erläutern, um -- sofern nicht aus der Namensgebung ersichtlich -- die
+Einarbeit zur Benutzung zu erläutern.
 
-Dies ist ein Beispielsatz.
+\begin{description}[leftmargin=1em]
+\item[Funktionen] werden in der finalen Version nicht mehr selbst ausgeführt, sondern von
+    den entsprechenden Skripten und der grafischen Oberfläche.
+    \begin{description}[format=\texttt,leftmargin=0em]
+    \item[adjacencyMatrix.m] Berechnet aus gegebenem \verb|parsed_osm|-Struct die
+        Adjazenzmatrix des ungerichteten Graphen, der das Straßennetzwerk repräsentiert.
+    \item[day.m] Rechnet Tag und Monat in Tag des Jahres um, zum Beispiel: 1. Januar
+        $\mapsto$ 1, 31. Dezember $\mapsto$ 365.
+    \item[earth\_follow\_elev.m] Berechnet aus Startposition, Laufgeschwindigkeit und Datum
+        die Laufroute auf einer Hindernis-losen Erde unter Berücksichtigung der Höhe.
+    \item[earth\_path.m] Berechnet entweder mit unserem einfachen Sonnenmodell oder mithilfe
+        der \textsc{Matlab}-Funktion \verb|SunAzEl| die nächste Position in Richtung
+        Sonne in Abhängigkeit der Zeit.
+    \end{description}
+\item[Skripte] $ $
+    \begin{description}[format=\texttt]
+    \item[test]
+    \end{description}
+\end{description}
 
 % Als Abschluss
 Alle von uns selbst geschriebenen Skripte und Funktionen sowie die Dateien der gehaltenen
