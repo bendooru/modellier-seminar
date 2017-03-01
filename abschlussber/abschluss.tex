@@ -80,7 +80,6 @@
 
 % zweite Seite für Inhalts- und Abbildungsverzeichnis
 \tableofcontents
-\vfill
 \listoffigures
 \newpage
 \pagestyle{headings}
@@ -157,8 +156,129 @@ Im Anhang werden die dabei entstandenen Dateien aufgelistet und erläutert. Es w
 erklärt, wie diese zu benutzen sind und welche Funktionen und Projekte wir verwendet haben.
 
 \section{Ein einfaches Sonnenmodell}
+Zur Realisierung unseres Modell ist es elementar notwendig, für einen gegebenen Zeitpunkt
+und eine gegebene Position zu bestimmen, wo oder in welcher Richtung sich die Sonne
+befindet, um ihr folgen zu können. Als einfache Umsetzung bieten sich für fast alle
+populären Programmiersprachen vorgefertigte Bibliotheken oder Funktionen an, die die
+Sonnenposition im Himmel als Winkelpaar berechnen.
 
-Dies ist ein Beispielsatz.
+\subsection{Position der Sonne}
+
+Stattdessen wollen wir ein einfaches Planetenmodell im $\setR^3$ entwickeln, mithilfe
+dessen wir die Position der Sonne und die entsprechende Gehrichtung unter Verwendung
+einfacher linearer Algebra bestimmen können. Dabei beziehen wir uns auf reale Daten und
+wollen diese in ein einfacheres Modell vereinfachen:
+
+Laut verschiedenen Quellen beträgt der Abstand der Erde zur Sonne im Verlauf eines Jahres
+zwischen 147{,}1 und 152{,}1~Millionen Kilometern, wir wählen als mittleren Abstand $d_S =
+149\,000\,000\,000\,\mathrm m$. Weiterhin sei die Erde als perfekte Kugel mit Radius $r_E
+= 6\,372\,000\,\mathrm m$ gegeben, die sich auf ebenen Kreislinie mit Radius $d_S$ in der
+$xy$-Ebene unseres Koordinatensystems gegen den Uhrzeigersinn um die Sonne bewegt. Sie
+bewege sich dabei mit konstanter Geschwindigkeit und einer Periode von einem
+Standard-Jahr, d.\,h.\ $p_S = 365\cdot 1440 \mathrm{min}$.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/tmp/helioz.png}
+    \caption{Heliozentrisches Modell, 21.\ Dezember}
+    \label{fig:helioz}
+\end{figure}
+
+Bevor wir dies in mathematischen Formeln konkretisieren, ist es sinnvoll, dieses
+heliozentrische Modell wie in Abbildung~\ref{fig:helioz} dargestellt in ein geozentrisches
+umzuwandeln, da wir im Endeffekt eine fest im Raum stehende Erde betrachten wollen. Sei
+dazu die Erde eine im Ursprung zentrierte Kugel mit Radius $r_E$ mit der durch die Gerade
+\begin{equation*}
+    a : \setR \to \setR^3, t \mapsto t\cdot \vecd{\sin(\alpha_E)}0{\cos(\alpha_E)}
+\end{equation*}
+gegebenen Rotationsachse, wobei $\alpha_E = 23{,}4^\circ \approx 0{,}13\pi$ die Erdneigung
+zur $z$-Achse ist. Die Erde dreht sich hierbei innerhalb eines Tages im Uhrzeigersinn um
+die eigene Achse, d.\,h.\ $p_E=1440\,\mathrm{min}$. In diesem geozentrischen Modell soll
+die Sonne zum Startzeitpunkt am Punkt $d_S \cdot (1, 0, 0)^T$ über dem Null-Meridian
+stehen. Klar ist, dass die Sonne dann am höchsten über der Norhalbkugel steht, also wählen
+wir den 21.\ Juni, den Tag der Sommersonnenwende, als Ausgangszeit. Wir messen die Zeit in
+Minuten seit dem 1.\ Januar, 0 Uhr UTC, also ergibt sich $t_0=172{,}5 \cdot 1440
+\,\mathrm{min}$. Schließlich ergibt sich folgende Parametrisierung für die Sonne im
+geozentrischen Modell:
+\begin{equation*}
+    s: \setR \to \setR^3, t\mapsto d_S \cdot
+        \vecd{\cos( \omega(t - t_0) )}{\sin( \omega(t - t_0) )}0
+\end{equation*}
+wobei $\omega = 2\pi/p_S$. Dieses Modell ist in Abbildung~\ref{fig:geoz} dargestellt.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/tmp/geoz.png}
+    \caption{Geozentrisches Modell, 21.\ Juni}
+    \label{fig:geoz}
+\end{figure}
+
+In diesem Modell dreht sich die Erde aber um ihre Achse, also sind feste Positionen auf
+der Erde nicht fest im Koordinatensystem, was das Arbeiten umständlich macht. Dies
+korrigieren wir in zwei Schritten: Zunächst drehen wir das Koordinatensystem so, dass
+die Rotationsachse der Erde und die $z$-Achse des Koordinatensystems übereinstimmen und
+anschließend kehren wir die Erdrotation um, sodass die Erde zeitunabhängig im
+Koordinatensystem sitzt.
+
+Da die Erdrotationsachse in unserem Modell in der $xz$-Ebene liegt, müssen wir das
+Koordinatensystem um die $y$-Achse drehen. Eine solche Rotationsmatrix ist für einen
+Winkel $\alpha\in\setR$ durch
+\begin{equation*}
+    R_y(\alpha) =
+    \begin{pmatrix}
+        \cos(\alpha)  & 0 & \sin(\alpha) \\
+        0             & 1 & 0            \\
+        -\sin(\alpha) & 0 & \cos(\alpha)
+    \end{pmatrix}
+\end{equation*}
+gegeben, was durch Nachvollziehen der Drehungen der Einheitsvektoren klar wird. Aus
+unserer Konstruktion ist nun einfach nachzuvollziehen, dass wir unser Koordinatensystem um
+den Winkel $-\alpha_E$ drehen müssen, denn $R_y(-\alpha_E)\cdot a(t) = (0, 0, t)^T$.
+
+Als nächstes wollen wir die Erdrotation -- jetzt um die $z$-Achse -- aufheben. Analog zu
+oben ergibt sich eine entsprechende Rotationsmatrix
+\begin{equation*}
+    R_z(\alpha) =
+    \begin{pmatrix}
+         \cos(\alpha) & \sin(\alpha) & 0 \\
+        -\sin(\alpha) & \cos(\alpha) & 0 \\
+        0             & 0            & 1
+    \end{pmatrix}
+\end{equation*}
+für Winkel $\alpha\in\setR$. Um nun die Erde für jeden beliebigen Zeitpunkt $t\in\setR$
+auf die Ausgangsposition zu $t_0$ \enquote{zurückzudrehen}, müssen wir offenbar um
+$-\omega_E(t-t_0)$ drehen, mit $\omega_E = 2\pi/p_E$. Somit erhalten wir die folgende
+Parametrisierung für die Sonne in unserem geozentrischen Modell:
+\begin{equation*}
+    P_S : \setR \to \setR^3, t\mapsto R_z(-\omega_E(t-t_0)) \cdot R_y(-\alpha_E) \cdot
+    s(t),
+\end{equation*}
+die Veränderungen sind in Abbildung~\ref{fig:geomod} erkennbar. Wir bemerken vorab das
+Kugelkoordinaten $(\alpha, \beta, r_E)$ für Punkte $p \in E := \{ x\in\setR^3 \mid \|x\| =
+r_E \}$ genau den Koordinaten des entsprechenden Punktes in Längen- und Breitengraden
+entsprechen.
+
+\begin{figure}[hbt]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/tmp/geomod1.png}
+        \caption{mit Erdrotation}
+    \end{subfigure}
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/tmp/geomod2.png}
+        \caption{Erdrotation korrigiert}
+    \end{subfigure}
+    \caption{Begradigung der Rotationsachse}
+    \label{fig:geomod}
+\end{figure}
+
+\subsection{Laufmodell und Richtungsbestimmung}
+Mit der Parametrisierung der Sonnenposition lässt sich nun für eine gegebene Position und
+Zeit bestimmen, welche die nächste Position in Richtung Sonne ist. Sei $p_0$ unser
+Ausganspunkt und $t$ die Ausgangszeit. Da es sich hierbei um einen diskreten Prozess
+handelt, sei $\Delta_t$ die Laufdauer (in min) und $v$ die Laufgeschwindigkeit (in m/min).
 
 \section{Erweiterung um Höhendaten}
 
@@ -168,11 +288,11 @@ Dies ist ein Beispielsatz.
 
 Dies ist ein Beispielsatz.
 
-\section{Bewegung auf Grundlage von Straßen und Wegen}
+\subsection{Bewegung auf Grundlage von Straßen und Wegen}
 
 Dies ist ein Beispielsatz.
 
-\section{Verallgemeinerung auf straßenloses Modell}
+\subsection{Verallgemeinerung auf straßenloses Modell}
 
 Dies ist ein Beispielsatz.
 
@@ -185,6 +305,7 @@ Dies ist ein Beispielsatz.
 Dies ist ein Beispielsatz.
 
 % Sollen wir das in dieses Dokument packen?
+\newpage
 \appendix
 \section{Verwendung unserer Skripte und Funktionen}
 In diesem Anhang wollen wir noch alle von uns geschriebenen Funktionen und Skripte
