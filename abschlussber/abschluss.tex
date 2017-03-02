@@ -300,14 +300,30 @@ projizieren:
 \end{equation*}
 Mit diesen Berechnungen lässt sich nun iterativ die Laufroute auf einer idealen Erde
 berechnen.
-% Abbildung einfügen!
+% TODO Abbildung einfügen!
 
 Schließlich wollen wir noch prüfen, wann die Sonne nicht mehr sichtbar -- also
 untergegangen -- ist, um unsere Berechnungen sinnvoll terminieren lassen zu können.
+Im wesentlichen müssen wir dafür den Winkel zwischen der Blickrichtung gen Sonne
+$P_S(t) - p$ und dem Normalenvektor $n_p$ bestimmen. Für Vektoren $a, b\in \setR^3$ gilt
+dabei
+\begin{equation*}
+    a\times b = \|a\|\|b\| \sin \alpha \cdot n \qquad
+    a \cdot b = \|a\|\|b\| \cos \alpha
+\end{equation*}
+für $\alpha = \measuredangle(a, b)$. Daraus folgt dann $\tan\alpha = \|a\times b\|/(a\cdot
+b)$. Da der Tangens nicht bijektiv ist, müssen wir den Winkel über $\alpha =
+\mathrm{atan2}(\|a\times b\|, a\cdot b)$ berechnen. Nun ist nur noch zu entscheiden, für
+welche Winkel die Sonne nicht mehr sichtbar ist: Eine naheliegende und einfache Annahme
+ist, für $\measuredangle(P_S(t) - p, n_p) > 90^\circ$ nichts zu tun.
 
 \section{Erweiterung um Höhendaten}
 
 Dies ist ein Beispielsatz.
+
+\subsection{Höhendaten und Laufgeschwindigkeit}
+
+\subsection{Vergleich zum vorigen Modell}
 
 \section{Realitätsbasierte Daten: OpenStreetMap}
 
