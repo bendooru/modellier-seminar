@@ -162,12 +162,12 @@ befindet, um ihr folgen zu können. Als einfache Umsetzung bieten sich für fast
 populären Programmiersprachen vorgefertigte Bibliotheken oder Funktionen an, die die
 Sonnenposition im Himmel als Winkelpaar berechnen.
 
-\subsection{Position der Sonne}
-
 Stattdessen wollen wir ein einfaches Planetenmodell im $\setR^3$ entwickeln, mithilfe
 dessen wir die Position der Sonne und die entsprechende Gehrichtung unter Verwendung
 einfacher linearer Algebra bestimmen können. Dabei beziehen wir uns auf reale Daten und
-wollen diese in ein einfacheres Modell vereinfachen:
+wollen diese in ein einfacheres Modell vereinfachen.
+
+\subsection{Position der Sonne}
 
 Laut verschiedenen Quellen beträgt der Abstand der Erde zur Sonne im Verlauf eines Jahres
 zwischen 147{,}1 und 152{,}1~Millionen Kilometern, wir wählen als mittleren Abstand $d_S =
@@ -276,9 +276,34 @@ entsprechen.
 
 \subsection{Laufmodell und Richtungsbestimmung}
 Mit der Parametrisierung der Sonnenposition lässt sich nun für eine gegebene Position und
-Zeit bestimmen, welche die nächste Position in Richtung Sonne ist. Sei $p_0$ unser
+Zeit bestimmen, welche die nächste Position in Richtung Sonne ist. Es seien $p_0$ unser
 Ausganspunkt und $t$ die Ausgangszeit. Da es sich hierbei um einen diskreten Prozess
 handelt, sei $\Delta_t$ die Laufdauer (in min) und $v$ die Laufgeschwindigkeit (in m/min).
+Da wir uns zu Fuß fortbewegen, können wir für relativ kleine $\Delta_t$ annehmen, dass die
+unmittelbar umgebende Kugeloberfläche eben ist. Um nun die Laufrichtung in Richtung Sonne
+zu bestimmen genügt es, den Verbingunsvektor von $p$ nach $P_S(t)$ auf die Tangentialebene
+von $E$ in $p$ zu projizieren. Diese Ebene ist durch den normierten Normalenvektor
+$n_p = p/\|p\|$ gegeben, sodass sich die Projektion $p_S$ wiefolgt ergibt:
+\begin{equation*}
+    p_S = \left( P_S(t) - p \right) - \left( (P_S(t) - p)\cdot n_p \right) \cdot
+    n_p
+\end{equation*}
+Um nun die gewünschte Distanz in Richtung Sonne gehen, addieren wir einfach den normierten
+Vektor mit geeignetem Faktor:
+\begin{equation*}
+    \tilde p = p + \frac{v\cdot\Delta_t}{\|p_S\|} p_S.
+\end{equation*}
+Anschließend müssen wir unsere neue Position durch anpassen der Norm zurück auf die Kugel
+projizieren:
+\begin{equation*}
+    p_{\text{neu}} = \frac{r_E}{\|\tilde p\|}\tilde p.
+\end{equation*}
+Mit diesen Berechnungen lässt sich nun iterativ die Laufroute auf einer idealen Erde
+berechnen.
+% Abbildung einfügen!
+
+Schließlich wollen wir noch prüfen, wann die Sonne nicht mehr sichtbar -- also
+untergegangen -- ist, um unsere Berechnungen sinnvoll terminieren lassen zu können.
 
 \section{Erweiterung um Höhendaten}
 
