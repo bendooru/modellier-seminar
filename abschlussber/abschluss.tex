@@ -147,13 +147,13 @@ erfordert, sich mit Sackgassen und Rundwegen zu beschäftigen.
 Als letzten Schritt in unserer Modellierung versuchen wir uns dann an der
 \enquote{Querfeldein}-Variante: Wir wollen uns auch außerhalb von Straßen bewegen
 können und müssen dafür Hindernisse erkennen und umgehen. Letztendlich ist das Umgehen in
-unserem Modell nur relativ primitiv umgesetzt, da es an Zeit mangelte.
-
-Abschließend machen wir unsere Ergebnisse in einer benutzerfreundlichen grafischen
-Oberfläche zugänglich.
+unserem Modell aber nur relativ primitiv umgesetzt. Abschließend machen wir unsere
+Ergebnisse in einer benutzerfreundlichen grafischen Oberfläche zugänglich.
 
 Im Anhang werden die dabei entstandenen Dateien aufgelistet und erläutert. Es wird zudem
 erklärt, wie diese zu benutzen sind und welche Funktionen und Projekte wir verwendet haben.
+
+Zur technischen Realisierung der hier präsentierten Modelle verwenden wir \textsc{Matlab}.
 
 \section{Ein einfaches Sonnenmodell}
 Zur Realisierung unseres Modell ist es elementar notwendig, für einen gegebenen Zeitpunkt
@@ -295,12 +295,21 @@ Vektor mit geeignetem Faktor:
 \end{equation*}
 Anschließend müssen wir unsere neue Position durch anpassen der Norm zurück auf die Kugel
 projizieren:
-\begin{equation*}
+\begin{equation}
     p_{\text{neu}} = \frac{r_E}{\|\tilde p\|}\tilde p.
-\end{equation*}
+    \label{eq:pneu}
+\end{equation}
 Mit diesen Berechnungen lässt sich nun iterativ die Laufroute auf einer idealen Erde
-berechnen.
-% TODO Abbildung einfügen!
+berechnen. Wie in \ref{fig:sonnenmodellroute} dargestellt, ergibt sich dabei wie intuitiv
+vielleicht erwartet eine elliptische bis kreisförmige Bahn.
+
+\begin{figure}[ht]
+    \centering
+    %\includegraphics[width=0.98\textwidth]{pfad/zur/datei}
+    PLATZHALTER
+    \caption{Ideale Laufroute, <Ort>, <Zeit>}
+    \label{fig:sonnenmodellroute}
+\end{figure}
 
 Schließlich wollen wir noch prüfen, wann die Sonne nicht mehr sichtbar -- also
 untergegangen -- ist, um unsere Berechnungen sinnvoll terminieren lassen zu können.
@@ -317,13 +326,56 @@ b)$. Da der Tangens nicht bijektiv ist, müssen wir den Winkel über $\alpha =
 welche Winkel die Sonne nicht mehr sichtbar ist: Eine naheliegende und einfache Annahme
 ist, für $\measuredangle(P_S(t) - p, n_p) > 90^\circ$ nichts zu tun.
 
-\section{Erweiterung um Höhendaten}
+Mithilfe dieser Information können wir auch für gegebene Position und Zeit den den
+nächsten oder letzten Sonnenauf- und Untergang bestimmen, indem wir einfach mit kleinem
+$\Delta_t$ vor- oder zurückzählen, bis die Sonne auf- oder untergeht. Dies verwenden wir
+später, wenn wir in unserem Modell bei Sonnenaufgang beginnen wollen.
 
-Dies ist ein Beispielsatz.
+\section{Erweiterung um Höhendaten}
+Eine naheliegende nächste Erweiterung des Modells ist das Einbeziehen von Höhendaten, um
+entsprechend die Laufgeschwindigkeit in zum Beispiel hügligerem Gelände zu beschreiben.
 
 \subsection{Höhendaten und Laufgeschwindigkeit}
+% Erwähne früher im Text, dass Matlab benutzt wird
+Als Quelle der Höhendaten wählen wir die seit 2015 frei verfügbaren Daten der
+internationalen SRTM (Shuttle Radar Topography Mission). Der Zugriff auf diese Daten wird
+uns durch ein durch einen Matlab-Nutzer vorgefertigtes Skript erleichtert, sodass an
+dieser Stelle wenig Implementierungsaufwand entsteht.
+
+Die von der SRTM bereitgestellten Daten liefern Höhendaten zu Koordinaten zwischen
+60$^\circ$ nördlicher Breite und 59$^\circ$ südlicher Breite, wobei der Abstand zwischen
+Datenpunkten von 30 bis 90 Meter reicht. Dies ist zwar gerade im Kontext der etwas
+langsameren Bewegung zu Fuß nicht sehr genau, für mittlere Steigungen sind die Daten aber
+mehr als ausreichend.
+
+Unter Verwendung linearer Interpolation können wir nun von der Existenz einer
+Höhenfunktion $e : [-180^\circ, 180^\circ]\times[-59^\circ, 60^\circ] \to \setR$ ausgehen,
+die wir zur Bestimmung mittlerer Steigungen verwenden können. Also müssen wir die
+Auswirkung der Steigung auf die Laufgeschwindigkeit untersuchen: Eine mögliche
+Beschreibung dieser Beziehung ist Toblers Hiking-Funktion \cite{wp:tobler}, die wie folgt
+definiert ist:
+\begin{equation*}
+    v = 6e^{-\left| \frac{\Delta e}{\Delta x} + 0{,}05 \right|}
+\end{equation*}
+mit Geschwindigkeit $v$ in km/h, Höhendifferenz $\Delta e$ und Distanz $\Delta x$, wobei
+die Funktion eine Höchstgeschwindigkeit von 6\,km/h ausgibt. Es seien nun
+$v_{\text{max}}$ die maximale Geschwindigkeit in m/min, $\Delta_t$ die zu laufende Zeit,
+$p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} bestimmte nächste
+Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
+Tupel\footnote{Die Länge ist uninteressant.} der entsprechenden Kugelkoordinaten
+konvertieren. Dann definiere
+\begin{equation*}
+    v_{\text{Tobler}} = v_{\text{max}} \cdot \exp\left|
+    \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{sph2kart}(p))}{v_{\text{max}}
+    \cdot \Delta_t} + 0{,}05 \right|
+\end{equation*}
+Die Idee ist nun, immer die konstante vertikale Distanz von $v_{\text{max}}\cdot\Delta_t$
+zurückzulegen und die passende Zeit $\Delta_t \cdot v_{\text{max}} / v_{\text{Tobler}}$
+verstreichen zu lassen.
 
 \subsection{Vergleich zum vorigen Modell}
+
+Dies ist ein Beispielsatz.
 
 \section{Realitätsbasierte Daten: OpenStreetMap}
 
@@ -344,6 +396,13 @@ Dies ist ein Beispielsatz.
 \section{Ausblick und weitere mögliche Fragestellungen}
 
 Dies ist ein Beispielsatz.
+
+\begin{thebibliography}{3}
+    \bibitem{wp:tobler}
+        Wikipedia. \emph{Tobler's hiking function},
+        \url{https://en.wikipedia.org/w/index.php?title=Tobler%27s_hiking_function&oldid=766415196}.
+        Aufgerufen am 3.\ März 2017.
+\end{thebibliography}
 
 % Sollen wir das in dieses Dokument packen?
 \newpage
