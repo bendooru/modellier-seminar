@@ -1,4 +1,11 @@
 function v = sonnen_pos(t)
+    % SONNEN_POS Berechnet die derzeitige Position der Sonne als 3D-Vektor
+    %   Aufruf: v = sonnen_pos(t) mit
+    %   t   Zeitpunkt in unserem Zeitformat (min seit 1.1. 00:00 UTC)
+    %   v   Position der Sonne als dreidimensionaler Vektor in unserem geozentrischen
+    %   	Modell
+    %
+    %   Funktionsweise siehe Ausarbeitung bzw. Folien
     tag = 1440; % minuten
     t_0 = 172.5*tag; % bestimmter Startwert
          

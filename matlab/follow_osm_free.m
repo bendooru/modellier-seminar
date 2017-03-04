@@ -1,6 +1,22 @@
 function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
-    % Funktion berechnet Route entlang Straßen und Wegen, wenn Sonne hinterhergelaufen
-    % wird
+    % FOLLOW_OSM_FREE Berechnet Route entlang Straßen und Wegen, wenn Sonne
+    % hinterhergelaufen wird
+    %   Aufruf: [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin) mit
+    %   lon         skalarer Längengrad,
+    %   lat         skalarer Breitengrad,
+    %   delta_t     Zeitschrittlänge in Minuten
+    %   tag         Tag als Tag des Jahres, d.h. 1 <= tag <= 365
+    %   fitness     ein Struct mit den Feldern
+    %                 walkpause   2xn Array mit Lauf- und Pausenzeiten
+    %                 f           Cell-Array von Funktionen, die die Laufgschwindigkeit
+    %                             in Abhängigkeit von der Zeit beschreibt
+    %   varargin    wird zusätzlich 'LinePlot' übergeben, werden die geparsten OSM-Daten
+    %               auch als Standardplot ausgegeben
+    %               wird 'NoElevation' mitübergeben, werden keine Höhendaten verwendet
+    %   X           2xm Array der Koordinaten jedes Schrittes der Route
+    %   D           in jedem Schritt zurückgelegte Distanz (kumulativ)
+    %   T           Zeitpunkt jedes Schrittes in unserem Zeitformat (Minuten seit 1.1.
+    %               00:00)
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];

@@ -1,16 +1,16 @@
 % lon = 7.768889;
 % lat = 49.444722;
 
-lon = 138.774444;
-lat =  36.684989;
+% lon = 138.774444;
+% lat =  36.684989;
 
 % lon=7.240602; lat=49.752821;
 
-% lon = 10; lat = 45.5;
+lon = 10; lat = 45.5;
 
 speed = 90;
 delta_t = 1;
-tag = 172;
+tag = 44;
 
 % füge 1 als 6. Argument hinzu, um für konstante Geschw. zu plotten
 setenv('MATLAB_SUNPOSITION_FUN', '');

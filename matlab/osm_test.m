@@ -12,21 +12,21 @@ coord = [7.753056, 49.423889];
 % Sydney
 % coord = [135.7, 35];
 % Irgendwo anders in Japan
-% coord = [132.9994, 33.3704];
+% coord = [132.9894, 33.3704];
 % 
 
 % coord = [28.929557, 69.051942];
 fitness.walkpause = [180; 25];
 fitness.f = { @(t) 90 };
 
-tag = 3;
-monat = 2;
+tag = 15;
+monat = 4;
 
 exmstr = 'KW';
 str = sprintf('%s [%.6f, %.6f] (%d/%d)\n', exmstr, coord, tag, monat);
 
 % [X, ax] = follow_osm_free(coord(1), coord(2), 1.5, 90, 172);
 % ax = osm_gui(21, 6, fitness, 'Animate', 'Coord', [7 49]);
-[X, ~, T] = follow_osm(coord(1), coord(2), 1, day(tag, monat), fitness, 'NoElevation');
+[X, ~, T] = follow_osm(coord(1), coord(2), 1, day(tag, monat), fitness, 'LinePlot');
 
 %save('beispiele/ex04etwas.mat', 'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');

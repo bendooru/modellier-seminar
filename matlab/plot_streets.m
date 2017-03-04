@@ -1,4 +1,12 @@
 function plot_streets(ax, parsed_osm)
+    % PLOT_STREETS Plottet alle Ways in einem osm-Struct
+    %   Aufruf: plot_streets(ax, parsed_osm) mit
+    %   ax          Axis in die geplottet werden soll
+    %   parsed_osm  OSM-Struct ausgegeben von parse_openstreetmap
+    %
+    %   Da einfach alle Ways stupide durchlaufen und geplottet werden, können bei größeren
+    %   Karten sehr viele Linien in die Axis geplottet werden, was zu verschlechterter
+    %   Performance führt
     [~, node, way, ~] = assign_from_parsed(parsed_osm);
     
     ways_num = size(way.id, 2);

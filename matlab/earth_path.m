@@ -1,7 +1,21 @@
 function [visible, p] = earth_path(p_0, t, delta_t, v, radius)
+    % EARTH_PATH Berechnet nächste Position ausgehend von Position und Zeit.
+    %   Aufruf: [visible, p] = earth_path(p_0, t, delta_t, v, radius) mit
+    %   p_0     Ausgangsposition
+    %   t       Zeitpunkt
+    %   delta_t Schrittdauer
+    %   v       Geschwindigkeit
+    %   radius  Radius der Erde
+    %   visible Sichtbarkeit der Sonne zum Zeitpunkt t
+    %   p       nächste Position
+    %
+    % Funktionsweise siehe Ausarbeitung bzw. Folien
+    
+    % Verwende Umgebungsvariablen, um Funktionsweise zu wählen
     if ~strcmpi(getenv('MATLAB_SUNPOSITION_FUN'), 'exact')
         p_normal = p_0 ./ norm(p_0);
 
+        % sonne_pos kann theoretisch auch in diese Funktion integriert werden
         sonPos = sonnen_pos(t) - p_0;
         sonne_elev = vector_angle(p_0, sonPos);
 

@@ -1,4 +1,8 @@
 function adjMat = adjacencyMatrix(parsed_osm)
+    % ADJACENCYMATRIX Berechnet sparse Adjazenzmatrix des geparsten Straßennetzes
+    %   Aufruf: adjMat = adjacencyMatrix(parsed_osm)
+    %   parsed_osm      OSM-Struct ausgegeben von parse_openstreetmap
+    %   adjMat          sparse Adjazenzmatrix (ungerichtet)
     [~, node, way, ~] = assign_from_parsed(parsed_osm);
     
     ways_num = size(way.id, 2);

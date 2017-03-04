@@ -1,4 +1,17 @@
 function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
+    % EARTH_FOLLOW_ELEV Berechne einen Tageslauf mit Höhendaten
+    %   Aufruf: [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs) mit
+    %   lon     Startlängengrad
+    %   lat     Startbreitengrad
+    %   speed   maximale Laufgschwindigkeit
+    %   delta_t Ausgangszeitschritt
+    %   tag     Tag des Jahres
+    %   cs      Toggle, um Höhendaten auszuschalten
+    %   S       Matrix mit Routenkoordinaten
+    %   E       Matrix mit Höhendaten für jeden Schritt
+    %   T       Zeitpunkt jedes Schrittes
+    %
+    % Funktionsweise siehe Ausarbeitung bzw. Folien
     earth_rad = 6371000;
     
     % einfacher Schalter, um Geschwindigkeit konstant zu machen

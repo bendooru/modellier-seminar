@@ -1,5 +1,8 @@
 function [X, D, T, ax] = osm_gui(d, m, fitness, varargin)
-    % Beispieltext
+    % OSM_GUI Testfunktion für grafische Interaktion
+    % See also FOLLOW_OSM für Argumente
+    % Warnung: durch Änderung der Funktionsweise anderer Funktionen könnte diese nichtmehr
+    % funktionieren
     
     % figure in die die Karte geplottet wird
     axisString = strcmpi('Axis', varargin);

@@ -1,9 +1,8 @@
 function SonneGUI
-    % Erstellt GUI, beinhaltet entsprechende Funktionen
+    % SONNEGUI Erstellt GUI zur Interaktion mit unseren Laufmodellen
     % ACHTUNG! Basiert auf Gui Layout Toolbox
 
     %% Hauptteil
-    %maxLat = rad2deg(atan(sinh(pi)));
     maxLat = pi;
     tiledir = 'tiles';
     mapdir  = 'maps';

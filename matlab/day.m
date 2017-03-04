@@ -1,8 +1,12 @@
-function tag_des_Jahres=day(tag,monat)
-    % Bekommt Tag und Monat (in Zahlen) und gibt ohne Berücksichtigung von
-    % Schaltjahren den Tag im Jahr aus
+function tdJ=day(tag,monat)
+    % DAY Tag des Jahres ausgehend von Tag und Monat
+    %   Aufruf: tag_des_Jahres=day(tag,monat)
+    %   tag         Tag des Monats
+    %   monat       Monat des Jahres
+    %   tdJ         Tag des Jahres
     
+    % einfache Berechnung über Montatslängen
     monat_dur = cumsum([0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30]);
     
-    tag_des_Jahres = monat_dur(monat) + tag;
+    tdJ = monat_dur(monat) + tag;
 end

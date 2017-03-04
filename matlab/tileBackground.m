@@ -1,9 +1,17 @@
 function tileBackground(xrange, yrange, ax)
+    % TILEBACKGROUND Plottet OpenStreetMap-Kacheln innerhalb der Koordinatenintervalle.
+    %   Aufruf: tileBackground(xrange, yrange, ax) mit Argumenten:
+    %   xrange  Intervallgrenzen der zu plottenden Längengrade,
+    %   yrange  Intervallgrenzen der zu plottenden Breitengrade,
+    %   ax      Axis in die geplottet werden soll.
+    %
+    %   Es wird dabei aus der Größe des Plotbereichs in Pixeln das adäquate Zoom-Level
+    %   errechnet und anschließend die benötigten Kacheln ggf. heruntergeladen und in ax
+    %   geplottet.
     ax.XLim = xrange; ax.YLim = fromMercator(yrange);
-    %drawnow;
-    %maxLat = rad2deg(atan(sinh(pi)));
     maxLat = pi;
 
+    % Ordner, in dem Kacheldateien gespeichert werden sollen
     tiledir = 'tiles';
     if ~isdir(tiledir)
         mkdir(tiledir);
@@ -17,11 +25,15 @@ function tileBackground(xrange, yrange, ax)
     ax.Units = oldunits;
 
     % wählere kleineres ZoomLevel berechnet nach x- und y-Längen
+    % Rechung ist im Grunde Dreisatz mit jeweils Höhe und Breite, nimm Minimum, da Matlab
+    % die Dimensionen des Plots größer als dargestellt angibt
     zlevel_ur = min(log2((pixelheight * maxLat)/range(fromMercator(yrange))) - 7, ...
         log2((pixelwidth * 180)/range(xrange)) - 7);
     zlevel = arrBounds(floor(zlevel_ur), 0, 16);
 
     % Vergrößere Nachträglich Plotbereich, um Tile pixelgetreu darzustellen
+    % wir zoomen niemals hinein, da sonst Informationen außerhalb des Plotbereichs landen
+    % könnten
     meanx = mean(xrange);
     xrange = meanx + 2^(zlevel_ur-zlevel).*(xrange-meanx);
     meany = mean(yrange);
@@ -85,6 +97,7 @@ function tileBackground(xrange, yrange, ax)
     end
 
     function tileimg = gettile(x, y, zlevel, tries)
+        % Bei Wiederversuch ist tries gesetzt
         if nargin < 4
             tries = 0;
         end
@@ -109,10 +122,12 @@ function tileBackground(xrange, yrange, ax)
             end
         catch ME
             if tries > 10
+                % Nach 10 Verbindungsversuchen gib einfach den Fehler aus
                 rethrow(ME);
             end
             fprintf('e');
             delete(tilename);
+            % sonst rufe die Funktion einfach erneut auf
             tileimg = gettile(x, y, zlevel, tries+1);
         end
     end
@@ -122,6 +137,7 @@ function tileBackground(xrange, yrange, ax)
         arr = min(max(arr, amin), amax);
     end
 
+    % Hin- und Rücktrannsformation für Mercatorprojektion
     function LAT = toMercator(Y)
         LAT = rad2deg(atan(sinh(Y)));
     end
