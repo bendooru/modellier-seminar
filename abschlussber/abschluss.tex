@@ -300,14 +300,13 @@ projizieren:
     \label{eq:pneu}
 \end{equation}
 Mit diesen Berechnungen lässt sich nun iterativ die Laufroute auf einer idealen Erde
-berechnen. Wie in \ref{fig:sonnenmodellroute} dargestellt, ergibt sich dabei wie intuitiv
-vielleicht erwartet eine elliptische bis kreisförmige Bahn.
+berechnen. Wie in Abbildung~\ref{fig:sonnenmodellroute} dargestellt, ergibt sich dabei wie
+intuitiv vielleicht erwartet eine elliptische bis kreisförmige Bahn.
 
 \begin{figure}[ht]
     \centering
-    %\includegraphics[width=0.98\textwidth]{pfad/zur/datei}
-    PLATZHALTER
-    \caption{Ideale Laufroute, <Ort>, <Zeit>}
+    \includegraphics[width=0.7\textwidth]{images/ideal.png}
+    \caption{Ideale Laufroute auf topologischer Karte bei Kaiserslautern, 21.\ Juni}
     \label{fig:sonnenmodellroute}
 \end{figure}
 
@@ -358,10 +357,11 @@ definiert ist:
     v = 6e^{-\left| \frac{\Delta e}{\Delta x} + 0{,}05 \right|}
 \end{equation*}
 mit Geschwindigkeit $v$ in km/h, Höhendifferenz $\Delta e$ und Distanz $\Delta x$, wobei
-die Funktion eine Höchstgeschwindigkeit von 6\,km/h ausgibt. Es seien nun
-$v_{\text{max}}$ die maximale Geschwindigkeit in m/min, $\Delta_t$ die zu laufende Zeit,
-$p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} bestimmte nächste
-Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
+die Funktion eine Höchstgeschwindigkeit von 6\,km/h ausgibt -- das beschrieben Verhältnis
+von Steigung zu Laufgeschwindigkeit ist in Abbildung~\ref{fig:tobler} abgebildet. Es seien
+nun $v_{\text{max}}$ die maximale Geschwindigkeit in m/min, $\Delta_t$ die zu laufende
+Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} bestimmte
+nächste Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
 Tupel\footnote{Die Länge ist uninteressant.} der entsprechenden Kugelkoordinaten
 konvertieren. Dann definiere
 \begin{equation*}
@@ -373,9 +373,46 @@ Die Idee ist nun, immer die konstante vertikale Distanz von $v_{\text{max}}\cdot
 zurückzulegen und die passende Zeit $\Delta_t \cdot v_{\text{max}} / v_{\text{Tobler}}$
 verstreichen zu lassen.
 
-\subsection{Vergleich zum vorigen Modell}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/tobler.png}
+    \caption{Toblers Hinkingfunktion}
+    \label{fig:tobler}
+\end{figure}
 
-Dies ist ein Beispielsatz.
+\subsection{Vergleich zum vorigen Modell}
+Nun stellt sich die Frage, ob der Einbezug der Höhendaten einen wesentlichen Effekt auf
+die Laufroute hat. Da sich auf keine offensichtliche Art und Weise mathematisch prüfen
+lässt, wollen wir einige Beispiele betrachten.
+
+In Abbildung~\ref{fig:elediff1} starten wir mit den Koordinaten $(7{,}768889^\circ,
+49{,}444722^\circ)$, was bei Kaiserslautern liegt, und können einen wesentlichen Unterschied im
+Verlauf der Route feststellen. Das in den topografischen Karten erkennbare hügelige
+Terrain sorgt dafür, dass wir unter Berücksichtigung der Höhendaten im Mittel sehr viel
+langsamer laufen und somit einen kleineren Bereich mit unserer Laufroute abdecken.
+Weiterhin ist in (b) auch zu sehen, dass die elliptische Form verloren geht, da die
+Laufgeschindigkeit größeren Schwankungen unterliegt.
+
+\begin{figure}[hbt]
+    \centering
+    \begin{subfigure}{0.3\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/elediff/feb13.png}
+        \caption{13.\ Februar}
+    \end{subfigure}
+    \begin{subfigure}{0.685\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/elediff/jun21.png}
+        \caption{21.\ Juni}
+    \end{subfigure}
+    \caption{Startpunkt bei Kaiserslautern (blau mit, rot ohne Höhendaten)}
+    \label{fig:elediff1}
+\end{figure}
+
+Somit ist zumindest ersichtlich, dass das Modell durch Hinzunahme von Höhendaten und
+variabler Laufgeschwindigkeit wesentlich beeinflusst wird. Wir müssen hier natürlich
+annehmen, dass die Hikingfunktion eine gute Beschreibung der Realität liefert, was aber
+für gröbere Schätzungen gewährleistet ist.
 
 \section{Realitätsbasierte Daten: OpenStreetMap}
 
@@ -399,13 +436,13 @@ Dies ist ein Beispielsatz.
 
 \begin{thebibliography}{3}
     \bibitem{wp:tobler}
-        Wikipedia. \emph{Tobler's hiking function},
+        Wikipedia.
+        \emph{Tobler's hiking function},
         \url{https://en.wikipedia.org/w/index.php?title=Tobler%27s_hiking_function&oldid=766415196}.
         Aufgerufen am 3.\ März 2017.
 \end{thebibliography}
 
 % Sollen wir das in dieses Dokument packen?
-\newpage
 \appendix
 \section{Verwendung unserer Skripte und Funktionen}
 In diesem Anhang wollen wir noch alle von uns geschriebenen Funktionen und Skripte
