@@ -12,14 +12,14 @@ Repository zur Speicherung relevanter Dateien:
     * Ein Aufruf der Form `osm_gui(_, 'Coord', [lon lat])` überspringt die grafische
       Koordinatenwahl
  * `Gui` oder `SonneGUI` stellen vollständige GUIs dar (letzteres braucht die GUI Layout
-   Toolbox
+   Toolbox)
  * `hgt`-Dateien werden nun im Unterverzeichnis `hgt` gespeichert, um den Hauptorder
    nicht zuzumüllen. Das `readhgt`-Skript scheint Probleme beim Verbinden über http zu
    haben.
 * `vorstellung`, `zwischenber1`, `zwischenber2`, `zwischenber3`, `abschlusspräs`,
   `abschlussber` enthalten die `tex`- und Bilddateien der entsprechenden Vorstellungen
 
-Externe Resourcen:
+Externe Resourcen: (**notwendig** für die meisten Funktionen)
 * Infos zur Overpass-OSM-API: [Link](https://wiki.openstreetmap.org/wiki/Overpass_API)
 * Details zur Berechnung von Kachelnamen: [Link](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 * Herunterladen und Lesen von HGT-Dateien der SRTM für Höhendaten:
