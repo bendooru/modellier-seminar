@@ -1,4 +1,6 @@
 *~
+*.swp
+*.xcf
 build/
 maps/
 maps-free/
