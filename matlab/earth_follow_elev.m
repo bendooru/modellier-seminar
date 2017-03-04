@@ -1,26 +1,22 @@
-function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
+function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
     % EARTH_FOLLOW_ELEV Berechne einen Tageslauf mit Höhendaten
     %   Aufruf: [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs) mit
-    %   lon     Startlängengrad
-    %   lat     Startbreitengrad
-    %   speed   maximale Laufgschwindigkeit
-    %   delta_t Ausgangszeitschritt
-    %   tag     Tag des Jahres
-    %   cs      Toggle, um Höhendaten auszuschalten
-    %   S       Matrix mit Routenkoordinaten
-    %   E       Matrix mit Höhendaten für jeden Schritt
-    %   T       Zeitpunkt jedes Schrittes
+    %   lon         Startlängengrad
+    %   lat         Startbreitengrad
+    %   speed       maximale Laufgschwindigkeit
+    %   delta_t     Ausgangszeitschritt
+    %   tag         Tag des Jahres
+    %   varargin    übergib 'Plot' für Plot mit Topo-Karte,
+    %               'ConstantSpeed', um Höhendaten zu ignorieren
+    %   S           Matrix mit Routenkoordinaten
+    %   E           Matrix mit Höhendaten für jeden Schritt
+    %   T           Zeitpunkt jedes Schrittes
     %
     % Funktionsweise siehe Ausarbeitung bzw. Folien
     earth_rad = 6371000;
     
     % einfacher Schalter, um Geschwindigkeit konstant zu machen
-    variable_speed = true;
-    if (nargin == 6)
-        if cs == 1
-            variable_speed = false;
-        end
-    end
+    variable_speed = ~any(strcmpi('ConstantSpeed', varargin));
     
     % Berechnung ausgehend von Breiten-/Längengraden
     p_0 = lonlat2vec(lon, lat, earth_rad);
@@ -95,16 +91,18 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs)
     S = S(:,1:i);
     E = E(:,1:i);
     T = T(:,1:i-1);
-    figure; plot(datetime('01-Jan-2017 00:00:00') +  minutes(T), V(:,1:i-1));
-    AREA = zeros(1,4);
-    % verkleinere umschließendes Rechteck
-    AREA([3 1]) = min(S,[],2) - 0.05;
-    AREA([4 2]) = max(S,[],2) + 0.05;
-    
-    readhgt(AREA, 'outdir', 'hgt', 'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
-    hold on;
-    plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
-    hold off;
+    if any(strcmpi('Plot', varargin))
+        %1figure; plot(datetime('01-Jan-2017 00:00:00') +  minutes(T), V(:,1:i-1));
+        AREA = zeros(1,4);
+        % verkleinere umschließendes Rechteck
+        AREA([3 1]) = min(S,[],2) - 0.05;
+        AREA([4 2]) = max(S,[],2) + 0.05;
+
+        readhgt(AREA, 'outdir', 'hgt', 'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
+        hold on;
+        plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
+        hold off;
+    end
     
     % Toblers Wanderfunktion in km/h
     function v = tobler(slope)
