@@ -26,7 +26,7 @@ Externe Resourcen: (**notwendig** für die meisten Funktionen)
   [Link](https://de.mathworks.com/matlabcentral/fileexchange/36379)
 * Verwenden OpenStreetMap-functions, um `osm`-Dateien einzulesen
   [Link](https://de.mathworks.com/matlabcentral/fileexchange/35819)
-* Matlab-Skript SunAzEl zur genauen Bestimmung des Sonnenstandes:
+* Matlab-Skript SolarAzEl zur genauen Bestimmung des Sonnenstandes:
   [Link](https://de.mathworks.com/matlabcentral/fileexchange/23051)
 * [GUI Layout Toolbox](https://de.mathworks.com/matlabcentral/fileexchange/47982) liefert
   etwas bessere Ergebnisse bei GUI-Erstellung.
