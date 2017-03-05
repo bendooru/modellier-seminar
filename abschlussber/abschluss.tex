@@ -25,7 +25,7 @@
     margin=0.2em,
     labelfont=bf,
     format=plain,
-    labelsep=endash
+    labelsep=period
 ]{caption}
 % Ermöglicht Anordnen von Unterfiguren
 \usepackage[%
@@ -33,7 +33,7 @@
     margin=0.2em,
     labelfont=bf,
     format=plain,
-    labelsep=endash
+    labelsep=space
 ]{subcaption}
 
 % Ermögliche Hyperlinks und anklickbare Referenzen
@@ -80,6 +80,7 @@
 
 % zweite Seite für Inhalts- und Abbildungsverzeichnis
 \tableofcontents
+\newpage
 \listoffigures
 \newpage
 \pagestyle{headings}
@@ -330,6 +331,34 @@ nächsten oder letzten Sonnenauf- und Untergang bestimmen, indem wir einfach mit
 $\Delta_t$ vor- oder zurückzählen, bis die Sonne auf- oder untergeht. Dies verwenden wir
 später, wenn wir in unserem Modell bei Sonnenaufgang beginnen wollen.
 
+\subsection{Vergleich mit exakten Berechnungen}
+% TODO
+Nach Entwurf dieses Modells stellt sich selbstverständlich die Frage, wie realistisch es
+nach all den Vereinfachungen noch ist. Der Einfachheit halber verwenden hier zum Vergleich
+eine vorgefertigte Funktion zur Berechnung der Sonnenposition, anstatt entsprechende
+Algorithmen selbst zu implementieren.
+
+\begin{figure}[hbt]
+    \centering
+    \begin{subfigure}{0.47\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/sunposdiffideal.png}
+        \caption{im idealen Laufmodell}
+    \end{subfigure}
+    \begin{subfigure}{0.51\textwidth}
+        \centering
+        \includegraphics[width=0.98\textwidth]{images/sunposdiffele.png}
+        \caption{Mit Höhendaten, siehe nächsten Abschnitt}
+    \end{subfigure}
+    \caption{Startpunkt bei Kaiserslautern (blau unseres, rot exaktes Modell)}
+    \label{fig:sunposmoddiff}
+\end{figure}
+
+Erkennbar ist nun in Abbildung~\ref{fig:sunposmoddiff}, dass im idealen Laufmodell kaum
+Unterschiede existieren, erweitern wir das Modell wie im nächsten Abschnitt jedoch um
+weitere Information, so kann diese bei kleinen Positionsdifferenzen zu größerer Divergenz
+der Routen führen.
+
 \section{Erweiterung um Höhendaten}
 Eine naheliegende nächste Erweiterung des Modells ist das Einbeziehen von Höhendaten, um
 entsprechend die Laufgeschwindigkeit in zum Beispiel hügligerem Gelände zu beschreiben.
@@ -362,8 +391,8 @@ von Steigung zu Laufgeschwindigkeit ist in Abbildung~\ref{fig:tobler} abgebildet
 nun $v_{\text{max}}$ die maximale Geschwindigkeit in m/min, $\Delta_t$ die zu laufende
 Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} bestimmte
 nächste Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
-Tupel\footnote{Die Länge ist uninteressant.} der entsprechenden Kugelkoordinaten
-konvertieren. Dann definiere
+Tupel\footnote{Die Länge des Vektors ist uninteressant.} der entsprechenden
+Kugelkoordinaten konvertieren. Dann definiere
 \begin{equation*}
     v_{\text{Tobler}} = v_{\text{max}} \cdot \exp\left|
     \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{sph2kart}(p))}{v_{\text{max}}
@@ -376,7 +405,7 @@ verstreichen zu lassen.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=0.5\textwidth]{images/tobler.png}
-    \caption{Toblers Hinkingfunktion}
+    \caption{Toblers Hinkingfunktion, Quelle: Wikimedia, \cite{wp:tobler}}
     \label{fig:tobler}
 \end{figure}
 
