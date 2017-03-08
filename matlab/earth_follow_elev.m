@@ -29,12 +29,14 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
     LAT = [floor(lat-0.5), ceil(lat+0.5)];
     LON = [floor(lon-0.5), ceil(lon+0.5)];
     
-    if ~isdir('hgt')
-        mkdir('hgt');
+    hgt_dir = fullfile(fileparts(mfilename('fullpath')), 'hgt');
+    
+    if ~isdir(hgt_dir)
+        mkdir(hgt_dir);
     end
     
     % http funktioniert irgendwie nicht mehr
-    R = readhgt([LAT, LON], 'interp', 'outdir', 'hgt', ...
+    R = readhgt([LAT, LON], 'interp', 'outdir', hgt_dir, ...
         'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
     
     maxsteps = round(1440/delta_t);
@@ -98,7 +100,7 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
         AREA([3 1]) = min(S,[],2) - 0.05;
         AREA([4 2]) = max(S,[],2) + 0.05;
 
-        readhgt(AREA, 'outdir', 'hgt', 'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
+        readhgt(AREA, 'outdir', hgt_dir, 'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
         hold on;
         plot(S(1,:), S(2,:), '-r', 'LineWidth', 2);
         hold off;

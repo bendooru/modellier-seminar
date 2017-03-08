@@ -4,10 +4,12 @@ function SonneGUI
 
     %% Hauptteil
     maxLat = pi;
-    tiledir = 'tiles';
-    mapdir  = 'maps';
-    mapfreedir = 'maps-free';
-    hgtdir  = 'hgt';
+    % Benutze absolute Pfade, falls SonneGUI nicht aus dem enthaltenden Verzeichnis
+    % aufgerufen wird
+    tiledir    = fullfile(fileparts(mfilename('fullpath')),'tiles');
+    mapdir     = fullfile(fileparts(mfilename('fullpath')),'maps');
+    mapfreedir = fullfile(fileparts(mfilename('fullpath')),'maps-free');
+    hgtdir     = fullfile(fileparts(mfilename('fullpath')),'hgt');
     
     createGUI;
     

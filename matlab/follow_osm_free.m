@@ -71,14 +71,15 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     
     % Format für Karten-Dateinamen
     map_filename_spec = 'map-%f_%f_%f_%f.mat';
-    map_dir_name = 'maps-free';
+    map_dir_name = fullfile(fileparts(mfilename('fullpath')),'maps-free');
+    hgt_dir_name = fullfile(fileparts(mfilename('fullpath')),'hgt');
     
     if ~isdir(map_dir_name)
         mkdir(map_dir_name);
     end
     
-    if consider_elevation && ~isdir('hgt')
-        mkdir('hgt');
+    if consider_elevation && ~isdir(hgt_dir_name)
+        mkdir(hgt_dir_name);
     end
     
     wbh = waitbar(0, 'Berechne Route ...');
@@ -225,7 +226,7 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
             % Kümmern uns um Höhendaten, falls gewünscht
             if consider_elevation && abs(coord(2)) < 60
                 R = readhgt(bounds([1 3 2 4]) + [-0.2, 0.2, -0.2, 0.2], ...
-                    'interp', 'outdir', 'hgt', ...
+                    'interp', 'outdir', hgt_dir_name, ...
                     'url', 'https://dds.cr.usgs.gov/srtm/version2_1');
                 E(1, step) = get_elevation(coord(1), coord(2));
             end

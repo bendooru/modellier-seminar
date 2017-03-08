@@ -12,7 +12,7 @@ function tileBackground(xrange, yrange, ax)
     maxLat = pi;
 
     % Ordner, in dem Kacheldateien gespeichert werden sollen
-    tiledir = 'tiles';
+    tiledir = fullfile(fileparts(mfilename('fullpath')),'tiles');
     if ~isdir(tiledir)
         mkdir(tiledir);
     end
