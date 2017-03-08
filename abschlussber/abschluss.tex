@@ -392,11 +392,12 @@ Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} be
 nächste Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
 Tupel\footnote{Die Länge des Vektors ist uninteressant.} der entsprechenden
 Kugelkoordinaten konvertieren. Dann definiere
-\begin{equation*}
+\begin{equation}
     v_{\text{Tobler}} = v_{\text{max}} \cdot \exp\left|
     \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{sph2kart}(p))}{v_{\text{max}}
     \cdot \Delta_t} + 0{,}05 \right|
-\end{equation*}
+    \label{eq:tobler}
+\end{equation}
 Die Idee ist nun, immer die konstante vertikale Distanz von $v_{\text{max}}\cdot\Delta_t$
 zurückzulegen und die passende Zeit $\Delta_t \cdot v_{\text{max}} / v_{\text{Tobler}}$
 verstreichen zu lassen.
@@ -473,10 +474,39 @@ Problemstellungen:
         Wege bewegen, da die Position der Sonne gegebenenfalls nicht immer zur Bestimmung
         der nächsten Position ausreicht. Dies wollen wir in den nächsten Absätzen prüfen.
 \end{enumerate}
-Wir speichern das unserem Wegmodell zugrundeliegende Straßen- und Wegenetzwerk als
+Wir speichern das unserem Wegmodell zugrundeliegende Straßen- und Wegnetzwerk als
 Adjazenzmatrix, um einfach adjazente Knoten ermitteln zu können. Weiterhin merken wir uns
-während dem Laufen den zuletzt besuchten Knoten und die bisher gelaufene Distanz.
-% TODO
+während dem Laufen den zuletzt besuchten Knoten und die bisher gelaufene Distanz. Wir
+modellieren die Straßennavigation wie folgt, wobei wir Terminologie aus der Graphentheorie
+für den das Straßennetz darstellenden Graphen verwenden:
+\begin{enumerate}[label=(\alph*),leftmargin=2em]
+    \item Haben wir nur einen Nachbarn, so befinden wir uns am Ende einer Sackgasse. Wir
+        vermerken, dass wir uns in einer Sackgasse befinden und bewegen uns zurück zum
+        einzig verfügbaren Nachbarknoten.
+    \item Haben wir abzüglich unseres Vorgängers nur einen Nachbarknoten, so befinden wir
+        uns auf einem Straßensegment, das keine Kreuzung ist. Damit wir bei ungünstiger
+        Sonnenposition nicht steckenbleiben bewegen wir uns zum Nichtvorgängerknoten. Auf
+        diese Weise laufen wir eine Straße immer komplett ab und entscheiden unser
+        Laufverhalten nur an Kreuzungen. Dies verhindert auch das Steckenbleiben in
+        Sackgassen.
+    \item Haben wir abzüglich unseres Vorgängers mehr als einen Nachbarknoten, so befinden
+        wir uns an einer Kreuzung. Es sind nun mehrere Dinge zu erledigen:
+        \begin{enumerate}[label=(\roman*)]
+            \item Ist die derzeitige \enquote{Herkunftsstraße} wie in (a) markiert eine
+                Sackgasse, so markiere den Vorgängerknoten als Sackgasseneingang.
+            \item Streiche alle bekannten Sackgasseneingänge aus der Liste der adjazenten
+                Knoten, um deren Wiederbesuch zu verhindern. Streiche weiterhin den
+                Vorgänger aus der Liste, um nicht kehrt machen zu müssen.
+            \item Es seien die verbleibenden Nachbarn als $p_i \in \setR^3$ gegeben,
+                unsere Position sei $p\in\setR^3$, dann bestimme den Index $i$, sodass
+                $(p_i - p) \cdot (P(t) - p)$ maximal ist: Mit dem Skalarprodukt überprüfen
+                wir, welche Gangrichtung am besten mit der Sonnenrichtung übereinstimmt.
+                Diese wird dann als nächste Position gewählt.
+        \end{enumerate}
+\end{enumerate}
+Zur Berechnung der dabei verstreichenden Zeit können wir wieder \eqref{eq:tobler}
+verwenden, wobei wir die Distanz $v_{\text{max}}\cdot\Delta_t$ durch die tatsächliche
+Distanz zwischen den besuchten Knoten ersetzen.
 
 \subsection{Verallgemeinerung auf straßenloses Modell}
 
