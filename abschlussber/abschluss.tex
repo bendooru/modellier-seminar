@@ -358,6 +358,13 @@ Unterschiede existieren, erweitern wir das Modell wie im nächsten Abschnitt jed
 weitere Information, so kann diese bei kleinen Positionsdifferenzen zu größerer Divergenz
 der Routen führen.
 
+\subsection{Laufpausen}
+Bevor wir mit der Erweiterung des Modells fortfahren, wollen wir noch anmerken, dass es
+eher unrealistisch ist, einen ganzen Tag lang ununterbrochen durchzulaufen. Aus diesem
+Grund fügen wir unserem Modell die Möglichkeit hinzu, Pausen einzulegen. Wir setzen dies
+jedoch statisch und benutzerdefinierbar um, da sich keine guten allgemeingültigen Aussagen
+über das Laufverhalten verschiedener Benutzer machen lässt.
+
 \section{Erweiterung um Höhendaten}
 Eine naheliegende nächste Erweiterung des Modells ist das Einbeziehen von Höhendaten, um
 entsprechend die Laufgeschwindigkeit in zum Beispiel hügligerem Gelände zu beschreiben.
@@ -497,16 +504,51 @@ für den das Straßennetz darstellenden Graphen verwenden:
             \item Streiche alle bekannten Sackgasseneingänge aus der Liste der adjazenten
                 Knoten, um deren Wiederbesuch zu verhindern. Streiche weiterhin den
                 Vorgänger aus der Liste, um nicht kehrt machen zu müssen.
+                \label{enum:streichsackg}
             \item Es seien die verbleibenden Nachbarn als $p_i \in \setR^3$ gegeben,
                 unsere Position sei $p\in\setR^3$, dann bestimme den Index $i$, sodass
                 $(p_i - p) \cdot (P(t) - p)$ maximal ist: Mit dem Skalarprodukt überprüfen
                 wir, welche Gangrichtung am besten mit der Sonnenrichtung übereinstimmt.
                 Diese wird dann als nächste Position gewählt.
         \end{enumerate}
+        \label{enum:kreuz}
 \end{enumerate}
 Zur Berechnung der dabei verstreichenden Zeit können wir wieder \eqref{eq:tobler}
 verwenden, wobei wir die Distanz $v_{\text{max}}\cdot\Delta_t$ durch die tatsächliche
 Distanz zwischen den besuchten Knoten ersetzen.
+
+\begin{figure}[htb]
+    \centering
+    PLATZHALTER FÜR OSM-BEISPIEL
+    \caption{Das Straßenmodell in Aktion}
+    \label{fig:osmmod}
+\end{figure}
+
+Mit diesem Vorgehen erzielen wir bereits gute Ergebnisse, aber in bestimmten
+Konfigurationen laufen wir uns ein Zykeln im Straßennetztwerk fest, bis sich die
+Sonnenposition genügend geändert hat. Die naheliegende Lösung ist nun, alle besuchten
+Knoten zu vermerken, um an wiederbesuchten Kreuzungen nicht immer die gleiche Entscheidung
+zu treffen. Es sei also $i$ die Anzahl der besuchten Knoten bzw.\ der gemachten
+Berechnungsschritte und $K$ die Menge der Knoten\footnote{OpenStreetMap gibt einen
+eindeutigen Schlüssel für jeden Knoten vor.}, dann sei $N:\{1, \dots, i\} \to K$ die Folge
+der von uns besuchten Knoten. Befinden wir uns im obigen Fall \ref{enum:kreuz}, so
+definiere
+\begin{equation*}
+    I = \bigl\{ \ell \in \{1, \dots, i-1\} \mid
+    N(\ell) = N(i) \wedge N(\ell-1) = N(i-1) \bigr\},
+\end{equation*}
+die Menge der Schritte in denen wir uns bereits an der jetzigen Kreuzung befanden und aus
+der gleichen Richtung kamen. Nun füge diesen Schritt nach obigem \ref{enum:streichsackg}
+ein: Solange $I\neq\varnothing$ und mindestens zwei Nachbarn übrig sind, entferne $\max I$
+aus den Nachbarn und aus $I$. Auf diese Weise werden die als letztes getroffenen
+Entscheidungen zuerst ausgeschlossen.
+
+\begin{figure}[htb]
+    \centering
+    PLATZHALTER FÜR ZYKEL-BEISPIEL
+    \caption{Kreislaufen im Straßenmodell}
+    \label{fig:osmzyk}
+\end{figure}
 
 \subsection{Verallgemeinerung auf straßenloses Modell}
 
