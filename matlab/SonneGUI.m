@@ -6,10 +6,12 @@ function SonneGUI
     maxLat = pi;
     % Benutze absolute Pfade, falls SonneGUI nicht aus dem enthaltenden Verzeichnis
     % aufgerufen wird
-    tiledir    = fullfile(fileparts(mfilename('fullpath')),'tiles');
-    mapdir     = fullfile(fileparts(mfilename('fullpath')),'maps');
-    mapfreedir = fullfile(fileparts(mfilename('fullpath')),'maps-free');
-    hgtdir     = fullfile(fileparts(mfilename('fullpath')),'hgt');
+    basepath = fileparts(mfilename('fullpath'));
+    
+    tiledir    = fullfile(basepath,'tiles');
+    mapdir     = fullfile(basepath,'maps');
+    mapfreedir = fullfile(basepath,'maps-free');
+    hgtdir     = fullfile(basepath,'hgt');
     
     createGUI;
     
@@ -86,9 +88,9 @@ function SonneGUI
         
         % finde .mat-Dateien im beispiel-Ordner und fürge entsprechende Menü-Eintrgäge
         % hinzu
-        exmfiles = dir(fullfile('beispiele', '*.mat'));
+        exmfiles = dir(fullfile(basepath, 'beispiele', '*.mat'));
         for i = 1:size(exmfiles, 1)
-            filename = fullfile('beispiele', exmfiles(i).name);
+            filename = fullfile(basepath, 'beispiele', exmfiles(i).name);
             loadedvar = load(filename, 'str');
             if isfield(loadedvar, 'str')
                 uimenu(loadmenu, ...
@@ -293,15 +295,15 @@ function SonneGUI
         
         str = sprintf('%s [%.6f, %.6f] (%d/%d)\n', titstr{1}, coord, tag, monat);
         
-        n = size(dir(fullfile('beispiele', 'beispiel-*.mat')), 1);
+        n = size(dir(fullfile(basepath, 'beispiele', 'beispiel-*.mat')), 1);
         filename = sprintf('beispiel-%04d.mat', n+1);
         
-        while size(dir(fullfile('beispiele', filename)), 1) > 0
+        while size(dir(fullfile(basepath, 'beispiele', filename)), 1) > 0
             n = n+1;
             filename = sprintf('beispiel-%04d.mat', n);
         end
         
-        filename = fullfile('beispiele', filename);
+        filename = fullfile(basepath, 'beispiele', filename);
         
         % speichere benötigte Variablen
         save(filename, 'str', 'coord', 'fitness', 'tag', 'monat', 'X', 'T');
@@ -320,10 +322,10 @@ function SonneGUI
         ghandles = guihandles(hObj);
         
         % selbst erstelle Beispiele haben beispiel-Präfix
-        eigeneBsp = dir(fullfile('beispiele', 'beispiel*'));
+        eigeneBsp = dir(fullfile(basepath, 'beispiele', 'beispiel*'));
         
         % Zu löschende Dateien
-        fnames = fullfile('beispiele', {eigeneBsp.name});
+        fnames = fullfile(basepath, 'beispiele', {eigeneBsp.name});
         
         % Liste aller Beispieldateien
         bspFnames = {ghandles.ExmMenu.Children.UserData};
@@ -412,7 +414,7 @@ function SonneGUI
         % falls kein Beispiel geladen
         if strcmp(get(ghandles.TagEdit, 'Enable'), 'on')
             % Orte zu südlich oder nördlich beitzen keine Höhendaten
-            if abs(coord(2)) > 60
+            if coord(2) > 60 || coord(2) < -59
                 opt = 'NoElevation';
             else
                 opt = 'Elevation';
@@ -444,7 +446,7 @@ function SonneGUI
         hold(ghandles.MainAx, 'on');
         cla(ghandles.MainAx);
         
-        % Extrema
+        % Extrema plus Zusatzabstand
         xyRange = minmax(data.XData) + [-0.001, 0.001; -0.001, 0.001];
 
         try

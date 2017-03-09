@@ -72,8 +72,7 @@ function tileBackground(xrange, yrange, ax)
         rethrow(ME)
     end
     
-    set(ax, 'YTickLabel', cellstr(num2str(toMercator(...
-            get(ax, 'YTick')'))));
+    set(ax, 'YTickLabel', cellstr(num2str(toMercator(get(ax, 'YTick')'))));
     
     close(wb);
 
@@ -109,8 +108,10 @@ function tileBackground(xrange, yrange, ax)
             websave(tilename, sprintf(...
                 'http://%c.tile.openstreetmap.org/%d/%d/%d.png', ...
                 subdom(randi(3, 1)), zlevel, x, y));
+            % Datei musste heruntergeladen werden (Fetched)
             fprintf('F');
         else
+            % Datei lokal gefunden
             fprintf('l');
         end
         
