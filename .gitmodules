@@ -1,0 +1,3 @@
+[submodule "externe_resourcen/openstreetmap"]
+	path = externe_resourcen/openstreetmap
+	url = https://github.com/bendooru/openstreetmap

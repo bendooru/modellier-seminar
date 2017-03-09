@@ -5,10 +5,9 @@ basepath = fileparts(mfilename('fullpath'));
 
 % verwende exemplarisch openstreetmap als externe Funktion
 if exist('parse_openstreetmap', 'file') ~= 2
-    paths = { 'readhgt', 'solar' };
-    osmpaths = fullfile('osmfun', ...
-        { 'dependencies', 'gaimc', 'hold', 'lat_lon_proportions', ...
-          'openstreetmapfunctions', 'plotmd', 'xml2struct' });
+    paths = { 'readhgt', 'solar', 'openstreetmap' };
+    osmpaths = fullfile('dependencies', ...
+        { 'gaimc', 'hold', 'lat_lon_proportions', 'plotmd', 'xml2struct' });
 
     allpaths = fullfile(basepath, 'externe_resourcen', [paths, osmpaths]);
     
@@ -24,4 +23,3 @@ end
 if exist('SonneGUI', 'file') ~= 2
     addpath(fullfile(basepath, 'matlab'), '-end');
 end
-    
