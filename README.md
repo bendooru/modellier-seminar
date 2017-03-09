@@ -19,7 +19,8 @@ Repository zur Speicherung relevanter Dateien:
 * `vorstellung`, `zwischenber1`, `zwischenber2`, `zwischenber3`, `abschlusspräs`,
   `abschlussber` enthalten die `tex`- und Bilddateien der entsprechenden Vorstellungen
 
-Externe Resourcen: (**notwendig** für die meisten Funktionen)
+Externe Resourcen: (**notwendig** für die meisten Funktionen). Befinden sich nun auch
+in diesem Repository -- ein zusätzlicher Download ist nicht mehr nötig.
 * Infos zur Overpass-OSM-API: [Link](https://wiki.openstreetmap.org/wiki/Overpass_API)
 * Details zur Berechnung von Kachelnamen: [Link](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 * Herunterladen und Lesen von HGT-Dateien der SRTM für Höhendaten:
