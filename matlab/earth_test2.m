@@ -10,13 +10,12 @@ lat = 49.444722;
 
 speed = 90;
 delta_t = 1;
-tag = 172;
+tag = 44;
 
-% füge 1 als 6. Argument hinzu, um für konstante Geschw. zu plotten
-% setenv('MATLAB_SUNPOSITION_FUN', '');
-%[S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag);
-% setenv('MATLAB_SUNPOSITION_FUN', 'exact');
-SC = earth_follow_elev(lon, lat, speed, delta_t, tag, 'ConstantSpeed', 'Plot');
+%setenv('MATLAB_SUNPOSITION_FUN', '');
+[S, ~, ~, V] = earth_follow_elev(lon, lat, speed, delta_t, tag);
+%setenv('MATLAB_SUNPOSITION_FUN', 'exact');
+SC = earth_follow_elev(lon, lat, mean(V), delta_t, tag, 'ConstantSpeed', 'Plot');
 
 hold on;
 plot(S(1, :), S(2, :), '-b', 'LineWidth', 2);

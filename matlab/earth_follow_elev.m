@@ -1,4 +1,4 @@
-function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
+function [S, E, T, V] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
     % EARTH_FOLLOW_ELEV Berechne einen Tageslauf mit Höhendaten
     %   Aufruf: [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, cs) mit
     %   lon         Startlängengrad
@@ -93,8 +93,9 @@ function [S, E, T] = earth_follow_elev(lon, lat, speed, delta_t, tag, varargin)
     S = S(:,1:i);
     E = E(:,1:i);
     T = T(:,1:i-1);
+    V = V(:,1:i-1);
     if any(strcmpi('Plot', varargin))
-        %1figure; plot(datetime('01-Jan-2017 00:00:00') +  minutes(T), V(:,1:i-1));
+        %1figure; plot(datetime('01-Jan-2017 00:00:00') +  minutes(T), V);
         AREA = zeros(1,4);
         % verkleinere umschließendes Rechteck
         AREA([3 1]) = min(S,[],2) - 0.05;
