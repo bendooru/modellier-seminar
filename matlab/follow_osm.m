@@ -15,6 +15,15 @@ function [X, D, T] = follow_osm(lon, lat, delta_t, tag, fitness, varargin)
     %   D           in jedem Schritt zurückgelegte Distanz (kumulativ)
     %   T           Zeitpunkt jedes Schrittes in unserem Zeitformat (Minuten seit 1.1.
     %               00:00)
+    %
+    %   Ausgabe auf der Kommandozeile während Berechnung:
+    %   [n][Q t1 s][P t2 s][A t3 s]
+    %   n: n-te benutzte Karte,
+    %   t1: Zeit für Anfrage an OSM-Server (Q -> Query)
+    %   t2: Zeit für Parsen der Daten (P -> Parse)
+    %   t3: Zeit für berechnen der Adjazenzmatrix (A -> Adjacency matrix)
+    %
+    %   wurde die Karte lokal gefunden wird der Block [Q ..][P ..] durch [L] ersetzt
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];

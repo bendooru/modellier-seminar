@@ -423,14 +423,16 @@ function SonneGUI
             % Wähle Funktion je nachdem, ob Option gecheckt ist
             if strcmpi(get(ghandles.OsmFunMenu, 'Checked'), 'on')
                 follow_fun = @follow_osm;
+                delta_t = 1;
             else
                 follow_fun = @follow_osm_free;
+                delta_t = 0.1;
             end
             
             % follow_osm braucht Netzwerkzugriff: fange Fehler ab
             try
                 [data.XData, ~, data.TData] = ...
-                    follow_fun(coord(1), coord(2), 1, tagj, fitness, opt);
+                    follow_fun(coord(1), coord(2), delta_t, tagj, fitness, opt);
             catch
                 set(hObj, 'Enable', 'on');
                 return

@@ -8,6 +8,9 @@ function tileBackground(xrange, yrange, ax)
     %   Es wird dabei aus der Größe des Plotbereichs in Pixeln das adäquate Zoom-Level
     %   errechnet und anschließend die benötigten Kacheln ggf. heruntergeladen und in ax
     %   geplottet.
+    %
+    %   Ausgabe auf der Kommandozeile während 
+    
     ax.XLim = xrange; ax.YLim = fromMercator(yrange);
     maxLat = pi;
 
