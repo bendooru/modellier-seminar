@@ -136,12 +136,12 @@ auf einer perfekten Kreisbahn um die Sonne bewegt. Weiterhin nehmen wir an, dass
 eine perfekte Kugel ist. Dies liefert dann bereits eine gute Intuition für die
 entstehende Laufroute. Anschließend erweitern wir das Modell um Höhendaten, um
 steigungsbedingte Laufgeschwindigkeiten zu ermöglichen. Dabei verwenden wir die frei
-verfügbaren Daten der SRTM.
+verfügbaren Daten der SRTM (Shuttle Radar Topography Mission).
 
 Um nun Hindernisse und dergleichen modellieren und umgehen zu können, brauchen wir
-entsprechende Daten. Der freien Zugänglichkeit wegen wählen wir dieser Stelle
+entsprechende Daten. Der freien Zugänglichkeit wegen wählen wir an dieser Stelle
 OpenStreetMap als Quelle für Straßendaten. Da der sofortige Übergang zu einem
-kollisionsbasierten Modell mit freier Beweglichkeit zunächst zu schwer erscheint,
+kollisionsbasierten Modell mit freier Beweglichkeit zunächst etwas kompliziert erscheint,
 entwerfen wir ein Fortbewegungsmodell auf Grundlage von Straßen und Wegen, was wiederum
 erfordert, sich mit Sackgassen und Rundwegen zu beschäftigen.
 
@@ -166,17 +166,18 @@ Sonnenposition im Himmel als Winkelpaar berechnen.
 Stattdessen wollen wir ein einfaches Planetenmodell im $\setR^3$ entwickeln, mithilfe
 dessen wir die Position der Sonne und die entsprechende Gehrichtung unter Verwendung
 einfacher linearer Algebra bestimmen können. Dabei beziehen wir uns auf reale Daten und
-wollen diese in ein einfacheres Modell vereinfachen.
+wollen diese in ein einfacheres Modell vereinfachen. Wie sich auch im späteren Vergleich
+gezeigt hat, ist unser simples Modell einfacher und schneller zu berechnen.
 
 \subsection{Position der Sonne}
 
 Laut verschiedenen Quellen beträgt der Abstand der Erde zur Sonne im Verlauf eines Jahres
 zwischen 147{,}1 und 152{,}1~Millionen Kilometern, wir wählen als mittleren Abstand $d_S =
 149\,000\,000\,000\,\mathrm m$. Weiterhin sei die Erde als perfekte Kugel mit Radius $r_E
-= 6\,372\,000\,\mathrm m$ gegeben, die sich auf ebenen Kreislinie mit Radius $d_S$ in der
-$xy$-Ebene unseres Koordinatensystems gegen den Uhrzeigersinn um die Sonne bewegt. Sie
-bewege sich dabei mit konstanter Geschwindigkeit und einer Periode von einem
-Standard-Jahr, d.\,h.\ $p_S = 365\cdot 1440 \mathrm{min}$.
+= 6\,372\,000\,\mathrm m$ gegeben, die sich auf der ebenen Kreislinie mit Radius $d_S$ in
+der $xy$-Ebene unseres Koordinatensystems gegen den Uhrzeigersinn um die Sonne bewegt. Sie
+bewege sich dabei mit konstanter Geschwindigkeit und einer Periode der Länge eines
+Standard-Jahres, d.\,h.\ $p_S = 365\cdot 1440 \mathrm{min}$.
 
 \begin{figure}[htb]
     \centering
@@ -187,7 +188,7 @@ Standard-Jahr, d.\,h.\ $p_S = 365\cdot 1440 \mathrm{min}$.
 
 Bevor wir dies in mathematischen Formeln konkretisieren, ist es sinnvoll, dieses
 heliozentrische Modell wie in Abbildung~\ref{fig:helioz} dargestellt in ein geozentrisches
-umzuwandeln, da wir im Endeffekt eine fest im Raum stehende Erde betrachten wollen. Sei
+umzuwandeln, da wir im Endeffekt eine fest im Raum stehende Erde betrachten wollen. Es sei
 dazu die Erde eine im Ursprung zentrierte Kugel mit Radius $r_E$ mit der durch die Gerade
 \begin{equation*}
     a : \setR \to \setR^3, t \mapsto t\cdot \vecd{\sin(\alpha_E)}0{\cos(\alpha_E)}
@@ -252,9 +253,9 @@ $-\omega_E(t-t_0)$ drehen, mit $\omega_E = 2\pi/p_E$. Somit erhalten wir die fol
 Parametrisierung für die Sonne in unserem geozentrischen Modell:
 \begin{equation*}
     P_S : \setR \to \setR^3, t\mapsto R_z(-\omega_E(t-t_0)) \cdot R_y(-\alpha_E) \cdot
-    s(t),
+    s(t).
 \end{equation*}
-die Veränderungen sind in Abbildung~\ref{fig:geomod} erkennbar. Wir bemerken vorab das
+Die Veränderungen sind in Abbildung~\ref{fig:geomod} dargestellt. Wir bemerken vorab, dass
 Kugelkoordinaten $(\alpha, \beta, r_E)$ für Punkte $p \in E := \{ x\in\setR^3 \mid \|x\| =
 r_E \}$ genau den Koordinaten des entsprechenden Punktes in Längen- und Breitengraden
 entsprechen.
@@ -277,19 +278,19 @@ entsprechen.
 
 \subsection{Laufmodell und Richtungsbestimmung}
 Mit der Parametrisierung der Sonnenposition lässt sich nun für eine gegebene Position und
-Zeit bestimmen, welche die nächste Position in Richtung Sonne ist. Es seien $p_0$ unser
-Ausganspunkt und $t$ die Ausgangszeit. Da es sich hierbei um einen diskreten Prozess
-handelt, sei $\Delta_t$ die Laufdauer (in min) und $v$ die Laufgeschwindigkeit (in m/min).
-Da wir uns zu Fuß fortbewegen, können wir für relativ kleine $\Delta_t$ annehmen, dass die
-unmittelbar umgebende Kugeloberfläche eben ist. Um nun die Laufrichtung in Richtung Sonne
-zu bestimmen genügt es, den Verbingunsvektor von $p$ nach $P_S(t)$ auf die Tangentialebene
-von $E$ in $p$ zu projizieren. Diese Ebene ist durch den normierten Normalenvektor
-$n_p = p/\|p\|$ gegeben, sodass sich die Projektion $p_S$ wiefolgt ergibt:
+Zeit bestimmen, welche die nächstgelegene Position in Richtung der Sonne ist. Es seien
+$p_0$ unser Ausganspunkt und $t$ die Ausgangszeit. Da es sich hierbei um einen diskreten
+Prozess handelt, sei $\Delta_t$ die Laufdauer (in min) und $v$ die Laufgeschwindigkeit (in
+m/min). Da wir uns zu Fuß fortbewegen, können wir für relativ kleine $\Delta_t$ annehmen,
+dass die unmittelbar umgebende Kugeloberfläche eben ist. Um nun die Laufrichtung in
+Richtung Sonne zu bestimmen genügt es, den Verbingunsvektor von $p$ nach $P_S(t)$ auf die
+Tangentialebene von $E$ in $p$ zu projizieren. Diese Ebene ist durch den normierten
+Normalenvektor $n_p = p/\|p\|$ gegeben, sodass sich die Projektion $p_S$ wiefolgt ergibt:
 \begin{equation*}
     p_S = \left( P_S(t) - p \right) - \left( (P_S(t) - p)\cdot n_p \right) \cdot
     n_p
 \end{equation*}
-Um nun die gewünschte Distanz in Richtung Sonne gehen, addieren wir einfach den normierten
+Um nun die gewünschte Distanz in Richtung Sonne zu gehen, addieren wir einfach den normierten
 Vektor mit geeignetem Faktor:
 \begin{equation*}
     \tilde p = p + \frac{v\cdot\Delta_t}{\|p_S\|} p_S.
@@ -300,7 +301,8 @@ projizieren:
     p_{\text{neu}} = \frac{r_E}{\|\tilde p\|}\tilde p.
     \label{eq:pneu}
 \end{equation}
-Mit diesen Berechnungen lässt sich nun iterativ die Laufroute auf einer idealen Erde
+% Vorschriften anstatt Ergebnissen
+Mit diesen Vorschriften lässt sich nun iterativ die Laufroute auf einer idealen Erde
 berechnen. Wie in Abbildung~\ref{fig:sonnenmodellroute} dargestellt, ergibt sich dabei wie
 intuitiv vielleicht erwartet eine elliptische bis kreisförmige Bahn.
 
@@ -326,15 +328,16 @@ b)$. Da der Tangens nicht bijektiv ist, müssen wir den Winkel über $\alpha =
 welche Winkel die Sonne nicht mehr sichtbar ist: Eine naheliegende und einfache Annahme
 ist, für $\measuredangle(P_S(t) - p, n_p) > 90^\circ$ nichts zu tun.
 
-Mithilfe dieser Information können wir auch für gegebene Position und Zeit den den
-nächsten oder letzten Sonnenauf- und Untergang bestimmen, indem wir einfach mit kleinem
+% Laut Duden tatsächlich mit doppeltem Bindestrich
+Mithilfe dieser Information können wir auch für eine gegebene Position und Zeit den den
+nächsten oder letzten Sonnenauf- und -untergang bestimmen, indem wir einfach mit kleinem
 $\Delta_t$ vor- oder zurückzählen, bis die Sonne auf- oder untergeht. Dies verwenden wir
 später, wenn wir in unserem Modell bei Sonnenaufgang beginnen wollen.
 
 \subsection{Vergleich mit exakten Berechnungen}
 Nach Entwurf dieses Modells stellt sich selbstverständlich die Frage, wie realistisch es
-nach all den Vereinfachungen noch ist. Der Einfachheit halber verwenden hier zum Vergleich
-eine vorgefertigte Funktion zur Berechnung der Sonnenposition, anstatt entsprechende
+nach all den Vereinfachungen noch ist. Zur Vereinfachung verwenden hier zum Vergleich eine
+vorgefertigte Funktion zur Berechnung der Sonnenposition, anstatt entsprechende
 Algorithmen selbst zu implementieren.
 
 \begin{figure}[hbt]
@@ -367,7 +370,7 @@ jedoch statisch und benutzerdefinierbar um, da sich keine guten allgemeingültig
 
 \section{Erweiterung um Höhendaten}
 Eine naheliegende nächste Erweiterung des Modells ist das Einbeziehen von Höhendaten, um
-entsprechend die Laufgeschwindigkeit in zum Beispiel hügligerem Gelände zu beschreiben.
+entsprechend die Laufgeschwindigkeit in beispielsweise hügligerem Gelände zu beschreiben.
 
 \subsection{Höhendaten und Laufgeschwindigkeit}
 % Erwähne früher im Text, dass Matlab benutzt wird
@@ -376,9 +379,9 @@ internationalen SRTM (Shuttle Radar Topography Mission). Der Zugriff auf diese D
 uns durch ein durch einen Matlab-Nutzer vorgefertigtes Skript erleichtert, sodass an
 dieser Stelle wenig Implementierungsaufwand entsteht.
 
-Die von der SRTM bereitgestellten Daten liefern Höhendaten zu Koordinaten zwischen
+Die von der SRTM bereitgestellten Daten liefern Höhendaten zu den Koordinaten zwischen
 60$^\circ$ nördlicher Breite und 59$^\circ$ südlicher Breite, wobei der Abstand zwischen
-Datenpunkten von 30 bis 90 Meter reicht. Dies ist zwar gerade im Kontext der etwas
+den Datenpunkten von 30 bis 90 Meter reicht. Dies ist zwar gerade im Kontext der etwas
 langsameren Bewegung zu Fuß nicht sehr genau, für mittlere Steigungen sind die Daten aber
 mehr als ausreichend.
 
@@ -391,14 +394,14 @@ definiert ist:
 \begin{equation*}
     v = 6e^{-\left| \frac{\Delta e}{\Delta x} + 0{,}05 \right|}
 \end{equation*}
-mit Geschwindigkeit $v$ in km/h, Höhendifferenz $\Delta e$ und Distanz $\Delta x$, wobei
-die Funktion eine Höchstgeschwindigkeit von 6\,km/h ausgibt -- das beschrieben Verhältnis
-von Steigung zu Laufgeschwindigkeit ist in Abbildung~\ref{fig:tobler} abgebildet. Es seien
-nun $v_{\text{max}}$ die maximale Geschwindigkeit in m/min, $\Delta_t$ die zu laufende
-Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in \eqref{eq:pneu} bestimmte
-nächste Position. Zudem soll die Funktion kart2sph kartesische Koordinaten in ein
-Tupel\footnote{Die Länge des Vektors ist uninteressant.} der entsprechenden
-Kugelkoordinaten konvertieren. Dann definiere
+mit de Geschwindigkeit $v$ in km/h, der Höhendifferenz $\Delta e$ und der Distanz $\Delta
+x$, wobei die Funktion eine Höchstgeschwindigkeit von 6\,km/h ausgibt -- das beschriebene
+Verhältnis von Steigung zu Laufgeschwindigkeit ist in Abbildung~\ref{fig:tobler}
+abgebildet. Es seien nun $v_{\text{max}}$ die maximale Geschwindigkeit in m/min,
+$\Delta_t$ die zu laufende Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in
+\eqref{eq:pneu} bestimmte nächste Position. Zudem soll die Funktion kart2sph kartesische
+Koordinaten in ein Tupel\footnote{Die Länge des Vektors ist uninteressant.} der
+entsprechenden Kugelkoordinaten konvertieren. Dann definiere
 \begin{equation}
     v_{\text{Tobler}} = v_{\text{max}} \cdot \exp\left|
     \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{sph2kart}(p))}{v_{\text{max}}
@@ -418,8 +421,8 @@ verstreichen zu lassen.
 
 \subsection{Vergleich zum vorigen Modell}
 Nun stellt sich die Frage, ob der Einbezug der Höhendaten einen wesentlichen Effekt auf
-die Laufroute hat. Da sich auf keine offensichtliche Art und Weise mathematisch prüfen
-lässt, wollen wir einige Beispiele betrachten.
+die Laufroute hat. Da sich dies auf keine offensichtliche Art und Weise mathematisch
+prüfen lässt, wollen wir einige Beispiele betrachten.
 
 In Abbildung~\ref{fig:elediff1} starten wir mit den Koordinaten $(7{,}768889^\circ,
 49{,}444722^\circ)$, was bei Kaiserslautern liegt, und können einen wesentlichen Unterschied im
@@ -427,7 +430,7 @@ Verlauf der Route feststellen. Das in den topografischen Karten erkennbare hüge
 Terrain sorgt dafür, dass wir unter Berücksichtigung der Höhendaten im Mittel sehr viel
 langsamer laufen und somit einen kleineren Bereich mit unserer Laufroute abdecken.
 Weiterhin ist in (b) auch zu sehen, dass die elliptische Form verloren geht, da die
-Laufgeschindigkeit größeren Schwankungen unterliegt.
+Laufgeschwindigkeit größeren Schwankungen unterliegt.
 
 \begin{figure}[hbt]
     \centering
@@ -446,22 +449,23 @@ Laufgeschindigkeit größeren Schwankungen unterliegt.
     \label{fig:elediff1}
 \end{figure}
 
-Somit ist zumindest ersichtlich, dass das Modell durch Hinzunahme von Höhendaten und
+Somit ist zumindest ersichtlich, dass das Modell durch die Hinzunahme von Höhendaten und
 variabler Laufgeschwindigkeit wesentlich beeinflusst wird. Wir müssen hier natürlich
-annehmen, dass die Hikingfunktion eine gute Beschreibung der Realität liefert, was aber
+annehmen, dass die Hiking-Funktion eine gute Beschreibung der Realität liefert, was aber
 für gröbere Schätzungen gewährleistet ist.
 
 \section{Realitätsbasierte Daten: OpenStreetMap}
 Für alle weiteren von uns als sinnvoll erachteten Erweiterungen des Modells ist es
 notwendig, Karten- oder Straßendaten einzubeziehen. Wir wählen hierfür den
-OpenStreetMap-Dienst, da er API-Zugriffe auf Kartendaten ohne besondere Accounts oder
-Entwicklerschlüssel zulässt und weiterhin auch gut dokumentiert ist.
+OpenStreetMap-Dienst, da er Kommunikation mit den Severn, insbesondere das Anfordern von
+Kartendaten,  ohne besondere Accounts oder Entwicklerschlüssel zulässt und auch gut
+dokumentiert ist.
 
 Ein Großteil unserer Projektarbeit hat sich damit beschäftigt, wie wir mit den
-OpenStreetMap kommunizieren und die erhaltenen Dateien verarbeiten können. Im Wesentlichen
-verwenden wir eine \textsc{Matlab}-Funktion, die OpenStreetMap-Daten aus dem XML-Format in
-ein leicht verwendbares Struct umwandelt. Diese Daten müssen dann über API-Anfragen an die
-entsprechenden Server angefordert werden.
+OpenStreet\-Map-Servern kommunizieren und die erhaltenen Dateien verarbeiten können. Im
+Wesentlichen verwenden wir eine \textsc{Matlab}-Funktion, die OpenStreetMap-Daten aus dem
+XML-Format in leicht verwendbare Strukturen umwandelt. Diese Daten müssen dann über
+API-Anfragen an die entsprechenden Server angefordert werden.
 % mehr?
 
 \subsection{Bewegung auf Grundlage von Straßen und Wegen}
@@ -469,15 +473,19 @@ In unserem ersten Erweiterungsversuch um Kartendaten haben wir unseren Fokus auf
 und befestigte Wege gelenkt, auf denen wir uns bewegen wollen. Hierbei entstehen zwei
 Problemstellungen:
 \begin{enumerate}[label=\arabic*.,leftmargin=1.5em]
-    \item Wie in zum Beispiel Abbildung~\ref{fig:sunposmoddiff} erkennbar überbrücken wir
+    \item Wie beispielsweise in Abbildung~\ref{fig:sunposmoddiff} erkennbar überbrücken wir
         große Distanzen bei einem eintägigen Lauf. Das gesamte umschließende Rechteck als
-        Karte hat meist eine Größe mehrerer hundert Megabyte kann nur mit enormem
-        Zeitaufwand verwendet werden.
+        Karte hat meist eine Größe mehrerer hundert Megabyte und kann nur mit enormem
+        Zeitaufwand verarbeitet werden, obwohl wir uns mit passenden Anfragen nur auf die
+        Straßen- und Wegdaten beschränken.
 
         In unserem Ansatz zentrieren wir ein kleines Koordinatenrechteck um unsere
         Ausgangsposition und bewegen uns, bis wir an die Grenze des Rechtecks stoßen. Dann
         zentrieren wir das Rechteck neu und laden die Kartendaten neu herunter. Dieser
-        Ansatz stellt sich als recht performant heraus.
+        Ansatz stellt sich als hinreichend effizient heraus und ermöglicht im Gegensatz
+        zu obigem naiven Vorgehen Rechenzeiten von nur wenigen Minuten\footnote{In unserer
+        Implementierung erzielen wir mit Caching Rechenzeiten von wenigen Sekunden, wenn
+        die benötigten Karten bereits einmal heruntergeladen wurden.}.
     \item Wir müssen uns überlegen, nach welchen Kriterien wir uns entlang der Straßen und
         Wege bewegen, da die Position der Sonne gegebenenfalls nicht immer zur Bestimmung
         der nächsten Position ausreicht. Dies wollen wir in den nächsten Absätzen prüfen.
@@ -506,7 +514,7 @@ für den das Straßennetz darstellenden Graphen verwenden:
                 Knoten, um deren Wiederbesuch zu verhindern. Streiche weiterhin den
                 Vorgänger aus der Liste, um nicht kehrt machen zu müssen.
                 \label{enum:streichsackg}
-            \item Es seien die verbleibenden Nachbarn als $p_i \in \setR^3$ gegeben,
+            \item Es seien die verbleibenden Nachbarn als $p_i \in \setR^3$ gegeben und
                 unsere Position sei $p\in\setR^3$, dann bestimme den Index $i$, sodass
                 $(p_i - p) \cdot (P(t) - p)$ maximal ist: Mit dem Skalarprodukt überprüfen
                 wir, welche Gangrichtung am besten mit der Sonnenrichtung übereinstimmt.
@@ -527,7 +535,7 @@ Distanz zwischen den besuchten Knoten ersetzen.
 \end{figure}
 
 Mit diesem Vorgehen erzielen wir bereits gute Ergebnisse, aber in bestimmten
-Konfigurationen laufen wir uns ein Zykeln im Straßennetztwerk fest, bis sich die
+Konfigurationen laufen wir uns in Zykeln im Straßennetztwerk fest, bis sich die
 Sonnenposition genügend geändert hat. Die naheliegende Lösung ist nun, alle besuchten
 Knoten zu vermerken, um an wiederbesuchten Kreuzungen nicht immer die gleiche Entscheidung
 zu treffen. Es sei also $i$ die Anzahl der besuchten Knoten bzw.\ der gemachten
@@ -537,13 +545,13 @@ der von uns besuchten Knoten. Befinden wir uns im obigen Fall \ref{enum:kreuz}, 
 definiere
 \begin{equation*}
     I = \bigl\{ \ell \in \{1, \dots, i-1\} \mid
-    N(\ell) = N(i) \wedge N(\ell-1) = N(i-1) \bigr\},
+    N(\ell) = N(i) \wedge N(\ell-1) = N(i-1) \bigr\}
 \end{equation*}
-die Menge der Schritte in denen wir uns bereits an der jetzigen Kreuzung befanden und aus
-der gleichen Richtung kamen. Nun füge diesen Schritt nach obigem \ref{enum:streichsackg}
-ein: Solange $I\neq\varnothing$ und mindestens zwei Nachbarn übrig sind, entferne $\max I$
-aus den Nachbarn und aus $I$. Auf diese Weise werden die als letztes getroffenen
-Entscheidungen zuerst ausgeschlossen.
+als die Menge der Schritte in denen wir uns bereits an der jetzigen Kreuzung befanden und
+aus der gleichen Richtung kamen. Nun füge diesen Schritt nach obigem
+\ref{enum:streichsackg} ein: Solange $I\neq\varnothing$ und mindestens zwei Nachbarn übrig
+sind, entferne $\max I$ aus den Nachbarn und aus $I$. Auf diese Weise werden die als
+letztes getroffenen Entscheidungen zuerst ausgeschlossen.
 
 \begin{figure}[htb]
     \centering
@@ -622,7 +630,7 @@ widmen könnte.
 \section{Verwendung unserer Skripte und Funktionen}
 In diesem Anhang wollen wir noch alle von uns geschriebenen Funktionen und Skripte
 auflisten und kurz erläutern, um -- sofern nicht aus der Namensgebung ersichtlich -- die
-Einarbeit zur Benutzung zu erläutern.
+Einarbeit zur Benutzung zu erleichtern.
 
 \begin{description}[leftmargin=1em]
 \item[Funktionen] werden in der finalen Version nicht mehr selbst ausgeführt, sondern von
@@ -633,7 +641,7 @@ Einarbeit zur Benutzung zu erläutern.
     \item[day.m] Rechnet Tag und Monat in Tag des Jahres um, zum Beispiel: 1. Januar
         $\mapsto$ 1, 31. Dezember $\mapsto$ 365.
     \item[earth\_follow\_elev.m] Berechnet aus Startposition, Laufgeschwindigkeit und Datum
-        die Laufroute auf einer Hindernis-losen Erde unter Berücksichtigung der Höhe.
+        die Laufroute auf einer hindernislosen Erde unter Berücksichtigung der Höhe.
     \item[earth\_path.m] Berechnet entweder mit unserem einfachen Sonnenmodell oder mithilfe
         der \textsc{Matlab}-Funktion \verb|SunAzEl| die nächste Position in Richtung
         Sonne in Abhängigkeit der Zeit.
