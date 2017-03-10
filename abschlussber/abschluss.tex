@@ -157,6 +157,7 @@ erklärt, wie diese zu benutzen sind und welche Funktionen und Projekte wir verw
 Zur technischen Realisierung der hier präsentierten Modelle verwenden wir \textsc{Matlab}.
 
 \section{Ein einfaches Sonnenmodell}
+\label{sec:sonne}
 Zur Realisierung unseres Modell ist es elementar notwendig, für einen gegebenen Zeitpunkt
 und eine gegebene Position zu bestimmen, wo oder in welcher Richtung sich die Sonne
 befindet, um ihr folgen zu können. Als einfache Umsetzung bieten sich für fast alle
@@ -555,6 +556,7 @@ letztes getroffenen Entscheidungen zuerst ausgeschlossen.
 
 \begin{figure}[htb]
     \centering
+    % TODO
     PLATZHALTER FÜR ZYKEL-BEISPIEL
     \caption{Kreislaufen im Straßenmodell}
     \label{fig:osmzyk}
@@ -562,7 +564,68 @@ letztes getroffenen Entscheidungen zuerst ausgeschlossen.
 
 \subsection{Verallgemeinerung auf straßenloses Modell}
 
-Dies ist ein Beispielsatz.
+Letztendlich wollen wir versuchen, unser Modell auf straßenlose Fortbewegung zu
+verallgemeinern. Dazu brauchen wir folgende Daten in unseren Karten:
+\begin{itemize}
+    \item Gebäudegrenzen,
+    \item Fluss-, See- und Meeresufer,
+    \item Barrieren, wie sie von OpenStreetMap markiert werden,
+\end{itemize}
+die wir benutzen, um Hindernisse bei der Berechnung der Route zu
+modellieren\footnote{Ggf.\ gibt es weitere Klassen, die wir beachten sollten.}. Wir
+bewegen uns nun wieder gemäß unseres vereinfachten Sonnenmodells aus
+Abschnitt~\ref{sec:sonne}, müssen aber die oben genannten Hindernisse beachten und
+bestenfalls auch umgehen.
+
+Der erste Schritt ist hierbei die Kollisionserkennung -- Wann würde meine Bewegung ein
+Hindernis durchqueren und wo muss ich stoppen? Da sich all diese Hindernisse als Polygone
+oder Polgonzüge im $\setR^2$ interpretieren lassen, ist die offensichtliche Antwort auf
+diese Frage lineare Algebra: In jedem Schritt wird durch unsere Bewegung eine Strecke
+beschrieben, also genügt es zu überprüfen, ob wir eine der gegebenen Strecken damit
+schneiden. Es seien dafür
+\begin{itemize}
+    \item $x_1, x_2 \in [-180^\circ, 180^\circ]\times[-90^\circ, 90^\circ]$ Start- und
+        Endpunkt der Bewegung und
+    \item $a_1, a_2 \in [-180^\circ, 180^\circ]\times[-90^\circ, 90^\circ]$ begrenzende
+        Punkte des betrachteten Abschnitts der Barriere,
+\end{itemize}
+insbesondere sind die Strecken die Bilder der Funktionen
+\begin{align*}
+    x:[0,1] &\to [-180^\circ, 180^\circ]\times[-90^\circ, 90^\circ],
+    t \mapsto t\cdot x_2 + (1-t) \cdot x_1, \\
+    a:[0,1] &\to [-180^\circ, 180^\circ]\times[-90^\circ, 90^\circ],
+    t \mapsto t \cdot a_2 + (1-t) \cdot a_1.
+\end{align*}
+Wir kollidieren also mit $a$, falls $s,t \in [0,1]$ mit $x(t) = a(s)$ existieren, siehe
+Abbildung~\ref{fig:collision} für eine Illustration. Konkret lösen wir
+\begin{align*}
+    x(t) = a(s) &\iff
+    t(x_2 - x_1) + x_1 = s(a_2 - a_1) + a_1 \\
+    &\iff
+    t\vecz{x_{21}-x_{11}}{x_{22}-x_{12}}+s\vecz{a_{21}-a_{11}}{a_{22}- a_{12}}
+    =\vecz{a_{11}-x_{11}}{a_{12}-x_{12}} \\
+    &\iff
+    \matDD{x_{21}-x_{11}}{a_{21}-a_{11}}{x_{22}-x_{12}}{a_{22}- a_{12}} \cdot
+    \vecz ts =\vecz{a_{11}-x_{11}}{a_{12}-x_{12}},
+\end{align*}
+mit den üblichen Methoden zunächst für $s,t\in\setR$. Finden wir Lösungen mit
+$s,t\in[0,1]$, so vermerken wir diese als Kollision. Dies wird für \emph{alle} Strecken in
+unserer Karte durchgeführt und bilden schließlich das Minimum über alle so gefundenen
+$t$: Dieses Minimum bezeichnet die erste Kollision während der Bewegung. Anstatt der
+vollen Strecke laufen wir in diesem Schritt nur noch die Strecke $x([0, 0{,}9\cdot
+t_{\min}])$ ab, um vor dem Hindernis stehen zu bleiben.
+
+\begin{figure}[htb]
+    \centering
+    % TODO
+    PLATZHALTER FÜR KOLLISIONSILLUSTRATION
+    \caption{Kollision mit Gebäudewänden.}
+    \label{fig:collision}
+\end{figure}
+
+Wenn wir bei einer Kollision stehenbleiben, stoppen wir in den meisten Fällen vor der
+erstbesten Barriere und warten mehrere Stunden, bis die Sonne uns an dieser vorbeiführt.
+Dieses recht nutzlose Modell müssen wir entsprechend um ein Ausweichmanöver erweitern.
 
 \section{Integration der Modelle in eine grafische Oberfläche}
 \label{sec:gui}
