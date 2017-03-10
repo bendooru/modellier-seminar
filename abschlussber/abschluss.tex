@@ -565,6 +565,7 @@ letztes getroffenen Entscheidungen zuerst ausgeschlossen.
 Dies ist ein Beispielsatz.
 
 \section{Integration der Modelle in eine grafische Oberfläche}
+\label{sec:gui}
 
 Um den Nutzer ein möglichst einfaches und intuitives Nutzen des Programms zu ermöglichen,
 werden alle Funktionsaufrufe von der Grafische Benutzeroberfläche (GUI) aus gesteuert,
@@ -623,37 +624,29 @@ widmen könnte.
         \emph{Tobler's hiking function},
         \url{https://en.wikipedia.org/w/index.php?title=Tobler%27s_hiking_function&oldid=766415196}.
         Aufgerufen am 3.\ März 2017.
+
+    \bibitem{git:modsemi}
+        GitHub. \emph{Modellier-Seminar},
+        \url{https://github.com/bendooru/modellier-seminar}.
 \end{thebibliography}
 
 % Sollen wir das in dieses Dokument packen?
 \appendix
 \section{Verwendung unserer Skripte und Funktionen}
-In diesem Anhang wollen wir noch alle von uns geschriebenen Funktionen und Skripte
-auflisten und kurz erläutern, um -- sofern nicht aus der Namensgebung ersichtlich -- die
-Einarbeit zur Benutzung zu erleichtern.
+In diesem Abschnitt wollen wir kurz den Umgang mit unseren Projektdateien erläutern.
+Alle von uns geschriebenen Skripte und Funktionen, externe Abhängigkeiten sowie die
+Dateien der gehaltenen Vorstellungen sind auf GitHub\cite{git:modsemi} verfügbar -- dort
+sind auch Installationshinweise gegeben, sofern diese gebraucht werden.
 
-\begin{description}[leftmargin=1em]
-\item[Funktionen] werden in der finalen Version nicht mehr selbst ausgeführt, sondern von
-    den entsprechenden Skripten und der grafischen Oberfläche.
-    \begin{description}[format=\texttt,leftmargin=0em]
-    \item[adjacencyMatrix.m] Berechnet aus gegebenem \verb|parsed_osm|-Struct die
-        Adjazenzmatrix des ungerichteten Graphen, der das Straßennetzwerk repräsentiert.
-    \item[day.m] Rechnet Tag und Monat in Tag des Jahres um, zum Beispiel: 1. Januar
-        $\mapsto$ 1, 31. Dezember $\mapsto$ 365.
-    \item[earth\_follow\_elev.m] Berechnet aus Startposition, Laufgeschwindigkeit und Datum
-        die Laufroute auf einer hindernislosen Erde unter Berücksichtigung der Höhe.
-    \item[earth\_path.m] Berechnet entweder mit unserem einfachen Sonnenmodell oder mithilfe
-        der \textsc{Matlab}-Funktion \verb|SunAzEl| die nächste Position in Richtung
-        Sonne in Abhängigkeit der Zeit.
-    \end{description}
-\item[Skripte] $ $
-    \begin{description}[format=\texttt]
-    \item[test]
-    \end{description}
-\end{description}
+Vor erstmaliger Benutzung sollte \verb|prepare_resources.m| ausgeführt werden, um alle
+nötigen Verzeichnisse dem \textsc{Matlab}-Pfad hinzuzufügen. Damit können unsere
+Funktionen verwendet werden, eine kurze Dokumentation und Erklärung der jeweiligen
+Funktionen kann mit \texttt{help \textit{funktion}} in der \textsc{Matlab}-Kommandozeile
+aufgerufen werden.
 
-% Als Abschluss
-Alle von uns selbst geschriebenen Skripte und Funktionen sowie die Dateien der gehaltenen
-Vorstellungen sind unter \url{https://github.com/bendooru/modellier-seminar} verfügbar.
+Die Hauptfunktion \texttt{SonneGUI} ruft unsere grafische Oberfläche auf und enthält
+sämtliche von uns erarbeitete Funktionalität, siehe dazu auch Abschnitt~\ref{sec:gui}. Zum
+gezielteren Testen verschiedener Funktionen stehen die Skripte \verb|earth_test|,
+\verb|earth_test2|, \verb|osm_test| und \verb|sonnetest| zur Verfügung.
 
 \end{document}
