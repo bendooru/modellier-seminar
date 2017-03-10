@@ -32,3 +32,12 @@ in diesem Repository -- ein zusätzlicher Download ist nicht mehr nötig.
 * [GUI Layout Toolbox](https://de.mathworks.com/matlabcentral/fileexchange/47982) liefert
   etwas bessere Ergebnisse bei GUI-Erstellung.
   [Dokumentation](http://cda.psych.uiuc.edu/matlab_programming_class_2012/guide/GUILayout_v1p10/GUILayout-v1p10/layoutHelp/index.html).
+
+# Installation
+
+Das Projekt kann via `git clone --recursive https://github.com/bendooru/modellier-seminar`
+geklont werden, `--recursive` wird benötigt, um das Submodul `openstreetmap` mitzuklonen.
+Anschließend können alle Funktionen nach Ausführung von `prepare_resources` verwendet werden.
+
+Wird das Projekt via Releases installiert, muss `openstreetmap-v0.3.zip` im Wurzelverzeichnis
+des entpackten Hauptarchivs platziert werden, bevor `prepare_resources` ausgeführt wird.
