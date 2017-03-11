@@ -640,6 +640,40 @@ t_{\min}])$ ab, um vor dem Hindernis stehen zu bleiben.
 Wenn wir bei einer Kollision stehenbleiben, stoppen wir in den meisten Fällen vor der
 erstbesten Barriere und warten mehrere Stunden, bis die Sonne uns an dieser vorbeiführt.
 Dieses recht nutzlose Modell müssen wir entsprechend um ein Ausweichmanöver erweitern.
+Dafür merken wir uns nach einer Kollision das entsprechende Streckenstück $a$ als
+Richtungsvektor $a_2-a_1$ und verwenden diesen im nächsten Berechnungsschritt, wobei wir
+je nach Sonnenposition $a_2-a_1$ oder $a_1-a_2$ wählen. Anschließend gehen normal wie oben
+beschrieben vor.
+
+Auf diese Weise können wir simple Hindernisse umgehen, indem wir an ihnen entlanglaufen.
+Ein Problem entsteht hierbei jedoch, wenn das Hindernis \enquote{konkave} Abschnitte
+enthält: Da wir versuchen, das Hindernis in Richtung der Sonne zu umlaufen, können wir in
+unpassend liegenden konkaven Ecken hängen bleiben, wie Abbildung~\ref{fig:collconcave}
+illustriert. Das hier zu beobachtende Phänomen der sukzessiven Annäherung an die Ecke ist
+dabei damit verbunden, dass wir immer etwa 90\,\% des Weges zur Wand laufen. Ein Versuch,
+den Abstand zur Wand konstant zu halten hat in unserer Implementierung zu anderen
+Problemen geführt.
+
+\begin{figure}[htb]
+    \centering
+    \begin{tikzpicture}
+        \draw[line width=1pt] (0,3) -- (0,0) -- (3,0) node[right] {Wand};
+        \draw[red,->] (2, 3) node[right] {\tiny Richtung Sonne} -- (0.5, 2.5);
+        \draw[red,->] (0.5, 2.5) -- (0.5, 0.5);
+        \draw[red,->] (0.5,0.5) -- (0.2,0.5);
+        \draw[red,->] (0.2,0.5) -- (0.2,0.1);
+        \draw[red,->] (0.2,0.1) -- (0.04,0.1);
+    \end{tikzpicture}
+    \caption{Steckenbleiben in \enquote{konkaven} Hindernissen.}
+    \label{fig:collconcave}
+\end{figure}
+
+Um dem entgegenzuwirken führen wir das Ausweichmanöver in die entgegengesetzte Richtung
+aus, wenn die letzte Bewegung bereits ein solches war. An dieser Stelle fehlt in unserer
+Implementierung jedoch ein Kriterium, wann dieses Verhalten sinnvoll ist: Zwar lassen sich
+Ecken wie oben beschrieben oftmals umgehen, insgesamt wird die Routenbestimmung aber sehr
+chaotisch, wenn es viele Hindernisse zu umgehen gibt, beispielsweise bei der Navigation
+durch eine Stadt.
 
 \section{Integration der Modelle in eine grafische Oberfläche}
 \label{sec:gui}
@@ -677,8 +711,9 @@ Beispiele laden, zurücksetzen, speichern und löschen.
 \section{Ausblick und weitere mögliche Fragestellungen}
 
 Von Beginn an hatten wir uns als Ziel gesetzt, das Gedankenspiel \enquote{Immer der Sonn'
-entgegen} anhand von realen Daten und Gegebenheiten zu modellieren. Dies ist uns sowohl
-mit der Fortbewegung auf Straßen und Wegen, als auch im freien Gelände gelungen.
+entgegen} anhand von realen Daten und Gegebenheiten zu modellieren. Dies ist uns
+mit der Fortbewegung auf Straßen und Wegen gut gelungen, im freien Gelände hat unser
+Modell noch etwas Verbesserungsbedarf.
 
 Darüber hinaus haben wir uns damit beschäftigt, für welche weitere möglichen Modelle und
 Ansprüche unser Modell die Grundlagen bilden könnte. Zum einen kann man stets beide
