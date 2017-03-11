@@ -232,7 +232,6 @@ wobei $\omega = 2\pi/p_S$. Dieses Modell ist in Abbildung~\ref{fig:geoz} dargest
 
 \begin{figure}[htb]
     \centering
-    % TODO
     \begin{tikzpicture}
         \draw[red,fill=yellow] (7,0) circle [radius=25pt]
             node[black]{\small Sonne};
@@ -302,15 +301,45 @@ entsprechen.
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering
-        % TODO
-        \includegraphics[width=0.98\textwidth]{images/tmp/geomod1.png}
+        \begin{tikzpicture}
+            \draw[red,fill=yellow,rotate=23.4] (3,0) circle [radius=15pt]
+                node[black]{\small\bfseries S};
+            \draw[green,fill=blue] (0,0) circle [radius=10pt]
+                node[white]{\small\bfseries E};
+
+            \draw[thick,domain=30:330,samples=100,->,rotate=23.4]
+                plot ({3*cos(\x)}, {sin(\x)});
+
+            \draw[thick]
+                (0, 8pt) -- (0,15pt)
+                (0,-10pt) -- (0,-15pt);
+
+            \draw[->, red, domain=20:340, shift={(0,15pt)}]
+                plot ({-0.3*sin(\x)}, {0.05*cos(\x)});
+        \end{tikzpicture}
         \caption{mit Erdrotation}
     \end{subfigure}
     \begin{subfigure}{0.48\textwidth}
         \centering
         % TODO
-        \includegraphics[width=0.98\textwidth]{images/tmp/geomod2.png}
-        \caption{Erdrotation korrigiert}
+        \begin{tikzpicture}
+            \draw[red,fill=yellow] (3,-1) circle [radius=15pt]
+                node[black]{\small\bfseries S};
+
+            \draw[thick,domain=360:690,samples=100,->]
+                plot ({3*cos(\x)}, {-\x/360 + 1 - sin(\x)});
+
+            \draw[green,fill=blue] (0,0) circle [radius=10pt]
+                node[white]{\small\bfseries E};
+
+            \draw[thick,domain=0:360,samples=100]
+                plot ({3*cos(\x)}, {-\x/360 + 1 - sin(\x)});
+
+            \draw[thick]
+                (0, 8pt) -- (0,15pt)
+                (0,-10pt) -- (0,-15pt);
+        \end{tikzpicture}
+        \caption{Erdrotation korrigiert (vereinfacht)}
     \end{subfigure}
     \caption{Begradigung der Rotationsachse}
     \label{fig:geomod}
