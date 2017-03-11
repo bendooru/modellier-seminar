@@ -421,8 +421,25 @@ verstreichen zu lassen.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.5\textwidth]{images/tobler.png}
-    \caption{Toblers Hinkingfunktion, Quelle: Wikimedia, \cite{wp:tobler}}
+    \begin{tikzpicture}[xscale=0.08,yscale=0.8]
+        \draw[very thin,gray,xstep=5,ystep=1] (-61, 6.5) grid (61,0);
+        \draw[dashed] (0,0) -- (0,6.5);
+
+        \draw[red, thick, domain=-61:61,samples=500]
+            plot (\x, {6*exp(-3.5*abs(tan(\x) + 0.05))});
+
+        \draw[->,thick] (-61,0) -- (-61, 6.5)
+            node[above] {\small Laufgeschwindigkeit [km/h]};
+        \draw[->,thick] (-61,0) -- (61,0)
+            node[right] {\small Steigung [$^\circ$]};
+
+        \foreach \i in {0, ..., 6}
+            \draw (-61, \i) node[left] {\small \i};
+
+        \foreach \i in {-60, -50, ..., 60}
+            \draw (\i, 0) node[below] {\small$\i$};
+    \end{tikzpicture}
+    \caption{Toblers Hinkingfunktion}
     \label{fig:tobler}
 \end{figure}
 
