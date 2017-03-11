@@ -233,7 +233,22 @@ wobei $\omega = 2\pi/p_S$. Dieses Modell ist in Abbildung~\ref{fig:geoz} dargest
 \begin{figure}[htb]
     \centering
     % TODO
-    \includegraphics[width=0.95\textwidth]{images/tmp/geoz.png}
+    \begin{tikzpicture}
+        \draw[red,fill=yellow] (7,0) circle [radius=25pt]
+            node[black]{\small Sonne};
+        \draw[green,fill=blue] (0,0) circle [radius=15pt]
+            node[white]{\small\bfseries Erde};
+
+        \draw[thick,domain=30:330,samples=100,->]
+            plot ({7*cos(\x)}, {1.5*sin(\x)});
+
+        \draw[thick]
+            (67.6:10pt) -- +(67.6:10pt)
+            (247.6:15pt) -- +(247.6:5pt);
+
+        \draw[->, red, domain=20:340, shift={(67.6:20pt)}, rotate={-23.4}]
+            plot ({-0.5*sin(\x)}, {0.1*cos(\x)});
+    \end{tikzpicture}
     \caption{Geozentrisches Modell, 21.\ Juni}
     \label{fig:geoz}
 \end{figure}
