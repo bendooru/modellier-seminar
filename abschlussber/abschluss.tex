@@ -404,11 +404,11 @@ Verhältnis von Steigung zu Laufgeschwindigkeit ist in Abbildung~\ref{fig:tobler
 abgebildet. Es seien nun $v_{\text{max}}$ die maximale Geschwindigkeit in m/min,
 $\Delta_t$ die zu laufende Zeit, $p$ unser Ausgangspunkt und $p_{\text{neu}}$ die wie in
 \eqref{eq:pneu} bestimmte nächste Position. Zudem soll die Funktion kart2sph kartesische
-Koordinaten in ein Tupel\footnote{Die Länge des Vektors ist uninteressant.} der
-entsprechenden Kugelkoordinaten konvertieren. Dann definiere
+Koordinaten in ein Tupel\footnote{Die Länge des Vektors ist in unserem Modell konstant und
+somit uninteressant.} der entsprechenden Kugelkoordinaten konvertieren. Dann definiere
 \begin{equation}
     v_{\text{Tobler}} = v_{\text{max}} \cdot \exp\left|
-    \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{sph2kart}(p))}{v_{\text{max}}
+    \frac{e(\mathrm{kart2sph}(p_\text{neu})) - e(\mathrm{kart2sph}(p))}{v_{\text{max}}
     \cdot \Delta_t} + 0{,}05 \right|
     \label{eq:tobler}
 \end{equation}
