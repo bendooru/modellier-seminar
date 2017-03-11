@@ -39,6 +39,9 @@
 % Ermögliche Hyperlinks und anklickbare Referenzen
 \usepackage{hyperref}
 
+% Tikz
+\usepackage{tikz}
+
 % ändere Titel Literatur -> Verweise
 \addto{\captionsngerman}{\renewcommand{\refname}{Verweise}}
 
@@ -619,8 +622,17 @@ t_{\min}])$ ab, um vor dem Hindernis stehen zu bleiben.
 
 \begin{figure}[htb]
     \centering
-    % TODO
-    PLATZHALTER FÜR KOLLISIONSILLUSTRATION
+    \begin{tikzpicture}
+        \draw[color={rgb:red,6;green,2;yellow,1}]
+            (1,1) -- (4,1) -- (4, 0.5) -- (5, 0.5) -- (5, 1) --
+            (8, 1) node[below] {Gebäude} -- (8, 3) -- (1, 3) -- cycle;
+
+        \draw[->,line width=1pt, color=red]
+            (2.5, 0.5) node[below right] {$x_1$} --
+            (0.5, 2.5) node[above left] {$x_2$};
+
+        \draw[fill] (2.1, 0.9) circle (1.5pt) node[below left] {$x_{\text{neu}}$};
+    \end{tikzpicture}
     \caption{Kollision mit Gebäudewänden.}
     \label{fig:collision}
 \end{figure}
