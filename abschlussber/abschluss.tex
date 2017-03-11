@@ -188,7 +188,22 @@ Standard-Jahres, d.\,h.\ $p_S = 365\cdot 1440 \mathrm{min}$.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/tmp/helioz.png}
+    \begin{tikzpicture}
+        \draw[red,fill=yellow] (0,0) circle [radius=25pt]
+            node[black]{\small Sonne};
+        \draw[green,fill=blue] (7,0) circle [radius=15pt]
+            node[white]{\small\bfseries Erde};
+
+        \draw[thick,domain=20:340,samples=100,->]
+            plot ({7*cos(\x)}, {1.5*sin(\x)});
+
+        \draw[thick]
+            (7,0) ++ (67.6:10pt) -- +(67.6:10pt)
+            (7,0) ++ (247.6:15pt) -- +(247.6:5pt);
+
+        \draw[->, red, domain=20:340, shift={(7,0)}, shift={(67.6:20pt)}, rotate={-23.4}]
+            plot ({-0.5*sin(\x)}, {0.1*cos(\x)});
+    \end{tikzpicture}
     \caption{Heliozentrisches Modell, 21.\ Dezember}
     \label{fig:helioz}
 \end{figure}
@@ -217,6 +232,7 @@ wobei $\omega = 2\pi/p_S$. Dieses Modell ist in Abbildung~\ref{fig:geoz} dargest
 
 \begin{figure}[htb]
     \centering
+    % TODO
     \includegraphics[width=0.95\textwidth]{images/tmp/geoz.png}
     \caption{Geozentrisches Modell, 21.\ Juni}
     \label{fig:geoz}
@@ -271,11 +287,13 @@ entsprechen.
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering
+        % TODO
         \includegraphics[width=0.98\textwidth]{images/tmp/geomod1.png}
         \caption{mit Erdrotation}
     \end{subfigure}
     \begin{subfigure}{0.48\textwidth}
         \centering
+        % TODO
         \includegraphics[width=0.98\textwidth]{images/tmp/geomod2.png}
         \caption{Erdrotation korrigiert}
     \end{subfigure}
