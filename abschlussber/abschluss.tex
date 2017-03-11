@@ -39,6 +39,9 @@
 % Ermögliche Hyperlinks und anklickbare Referenzen
 \usepackage{hyperref}
 
+% ändere Titel Literatur -> Verweise
+\addto{\captionsngerman}{\renewcommand{\refname}{Verweise}}
+
 % stelle Fonts auf Serif
 \setkomafont{sectioning}{\rmfamily\bfseries\boldmath}
 \setkomafont{descriptionlabel}{\rmfamily\bfseries}
@@ -529,7 +532,7 @@ Distanz zwischen den besuchten Knoten ersetzen.
 
 \begin{figure}[htb]
     \centering
-    % evtl. zu hochauflösend
+    % TODO: evtl. zu hochauflösend
     \includegraphics[width=0.98\textwidth]{images/tukl_strasse_gross.png}
     \caption{Das Straßenmodell in Aktion}
     \label{fig:osmmod}
@@ -556,9 +559,8 @@ letztes getroffenen Entscheidungen zuerst ausgeschlossen.
 
 \begin{figure}[htb]
     \centering
-    % TODO
-    PLATZHALTER FÜR ZYKEL-BEISPIEL
-    \caption{Kreislaufen im Straßenmodell}
+    \includegraphics[width=0.99\textwidth]{images/tuklzykel.png}
+    \caption{Kreislaufen im Straßenmodell: Ausschnitt von Abbildung~\ref{fig:osmmod}}
     \label{fig:osmzyk}
 \end{figure}
 
@@ -568,7 +570,7 @@ Letztendlich wollen wir versuchen, unser Modell auf straßenlose Fortbewegung zu
 verallgemeinern. Dazu brauchen wir folgende Daten in unseren Karten:
 \begin{itemize}
     \item Gebäudegrenzen,
-    \item Fluss-, See- und Meeresufer,
+    \item Fluss-, See- und Meeresufer und
     \item Barrieren, wie sie von OpenStreetMap markiert werden,
 \end{itemize}
 die wir benutzen, um Hindernisse bei der Berechnung der Route zu
