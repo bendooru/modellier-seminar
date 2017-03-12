@@ -39,3 +39,5 @@ end
 if exist('SonneGUI', 'file') ~= 2
     addpath(fullfile(basepath, 'matlab'), '-end');
 end
+
+clear basepath paths osmpaths allpaths osmpath guipaths;

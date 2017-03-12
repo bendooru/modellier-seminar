@@ -429,7 +429,10 @@ Algorithmen selbst zu implementieren.
 Erkennbar ist nun in Abbildung~\ref{fig:sunposmoddiff}, dass im idealen Laufmodell kaum
 Unterschiede existieren, erweitern wir das Modell wie im nächsten Abschnitt jedoch um
 zusätzliche Information, so kann diese bei kleinen Positionsdifferenzen zu größerer
-Divergenz der Routen führen.
+Divergenz der Routen führen. Die exakte Berechnung der Sonnenposition ist aufgrund der
+benötigten Genauigkeit und (in diesem Fall) der Umrechnung von Zeitpunkten vergleichsweise
+kostspielig, weswegen wir uns trotz der kleinen Abweichungen für das simple Modell
+entscheiden.
 
 \subsection{Laufpausen}
 Bevor wir mit der Erweiterung des Modells fortfahren, wollen wir noch anmerken, dass es
@@ -615,7 +618,6 @@ Distanz zwischen den besuchten Knoten ersetzen.
 
 \begin{figure}[htb]
     \centering
-    % TODO: evtl. zu hochauflösend
     \includegraphics[width=0.98\textwidth]{images/tukl_strasse_gross.png}
     \caption{Das Straßenmodell in Aktion}
     \label{fig:osmmod}
@@ -700,6 +702,11 @@ $t$: Dieses Minimum bezeichnet die erste Kollision während der Bewegung. Anstat
 vollen Strecke laufen wir in diesem Schritt nur noch die Strecke $x([0, 0{,}9\cdot
 t_{\min}])$ ab, um vor dem Hindernis stehen zu bleiben.
 
+Dieser Schritt ist teilweise sehr rechenintensiv, da sämtliche Daten der geladenen Karte
+durchgegangen werden. Somit ist die einzige Möglichkeit, Berechnungen einzusparen, die
+zu ladenden Karten zu verkleinern, wobei wir auch darauf achten müssen, nicht zu viele
+Anfragen an die OpenStreetMap-Server zu stellen.
+
 \begin{figure}[htb]
     \centering
     \begin{tikzpicture}
@@ -753,7 +760,37 @@ aus, wenn die letzte Bewegung bereits ein solches war. An dieser Stelle fehlt in
 Implementierung jedoch ein Kriterium, wann dieses Verhalten sinnvoll ist: Zwar lassen sich
 Ecken wie oben beschrieben oftmals umgehen, insgesamt wird die Routenbestimmung aber sehr
 chaotisch, wenn es viele Hindernisse zu umgehen gibt, beispielsweise bei der Navigation
-durch eine Stadt.
+durch eine Stadt. Ein weitestgehend erfolgreiches Beispiel ist in
+Abbildung~\ref{fig:nostreet} abgebildet. Leicht zu erkennen ist, dass die Fortbewegung
+außerhalb von Städten mit unserem Sonnenmodell übereinstimmt, da es kaum oder keine
+Hindernisse zu
+umgehen gibt.
+
+\begin{figure}[hbt]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.99\textwidth]{images/nostreettukl.png}
+        \caption{Ganze Route}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.99\textwidth]{images/nostreettuklzoom.png}
+        \caption{Navigation um Gebäude in Uni-Nähe}
+    \end{subfigure}
+    \caption{Straßenloses Laufen bei Kaiserslautern}
+    \label{fig:nostreet}
+\end{figure}
+
+Ein Problem in unserer jetzigen Implementierung ist zum einen, dass zu Beginn der
+Berechnung nicht geprüft wird, ob wir uns in einem Gebäude befinden, und entsprechend in
+diesem gefangen sind. Da wir uns bei Kollisionsprüfungen potentiell immer weiter an ein
+Hindernis annähern, kann es wegen numerischer Fehler zum anderen passieren, dass wir durch
+ein Hindernis hindurchlaufen und dann wieder beim ersten Problem landen.
+
+Letztlich beruht das Projekt auf dem externen Faktor OpenStreetMap; so gibt es Dörfer, die
+nur sehr spärlich kartografiert wurden, wobei das Straßennetz in de Regel vollständig
+vorliegt.
 
 \section{Integration der Modelle in eine grafische Oberfläche}
 \label{sec:gui}

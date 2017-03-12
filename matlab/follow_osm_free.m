@@ -24,7 +24,8 @@ function [X, D, T] = follow_osm_free(lon, lat, delta_t, tag, fitness, varargin)
     %   t1: Zeit für Anfrage an OSM-Server (Q -> Query)
     %   t2: Zeit für Parsen der Daten (P -> Parse)
     %
-    %   wurde die Karte lokal gefunden wird der Block [Q ..][P ..] durch [L] ersetzt
+    %   Wurde die Karte lokal gefunden wird der Block [Q ..][P ..] durch [L] ersetzt,
+    %   ist die heruntergeladene Karte leer wird [P ..] durch [P e] ersetzt.
     
     % muss Spaltenvektor sein!
     coord = [lon; lat];
