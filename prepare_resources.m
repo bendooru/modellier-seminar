@@ -7,7 +7,7 @@ basepath = fileparts(mfilename('fullpath'));
 if exist('xml2struct_fex28518', 'file') ~= 2
     paths = { 'readhgt', 'solar' };
     osmpaths = fullfile('dependencies', ...
-        { 'gaimc', 'hold', 'lat_lon_proportions', 'plotmd', 'xml2struct' });
+        { 'gaimc', 'hold', 'lat_lon_proportions', 'plotmd', 'textmd', 'xml2struct' });
 
     allpaths = fullfile(basepath, 'externe_resourcen', [paths, osmpaths]);
     
